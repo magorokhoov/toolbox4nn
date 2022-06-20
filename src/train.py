@@ -13,9 +13,6 @@ from tqdm import tqdm, tqdm_notebook
 from modules.models.classificator import Classificator
 from utils import utils
 
-#from models.archs.my_simple_CLNN import my_simple_CLNN
-#from data.dataset_CL_2folder import Dataset_CL_2folder
-
 
 def main():
     parser = argparse.ArgumentParser()
