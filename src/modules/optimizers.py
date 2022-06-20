@@ -19,7 +19,7 @@ def get_optimizer(model_params, option_optimizer: dict):
     name = option_optimizer.get('name', None)
     if name is None:
         raise NotImplementedError(
-            f'Optimizer is None. Please, add to config file')
+            'Optimizer is None. Please, add to config file')
     name = name.lower()
 
     optimizer = None
@@ -29,7 +29,6 @@ def get_optimizer(model_params, option_optimizer: dict):
         weight_decay = float(option_optimizer.get('weight_decay', 0.0))
         nesterov = option_optimizer.get('nesterov', False)
         dampening = float(option_optimizer.get('dampening', 0.0))
-        #eps = option_optimizer.get('eps', None)
 
         optimizer = torch.optim.SGD(
             model_params,
@@ -45,7 +44,6 @@ def get_optimizer(model_params, option_optimizer: dict):
         beta2 = float(option_optimizer.get('beta2', 0.999))
         weight_decay = float(option_optimizer.get('weight_decay', 0.0))
         amsgrad = option_optimizer.get('amsgrad', False)
-        #eps = option_optimizer.get('eps', None)
 
         Class_optimizer = torch.optim.AdamW if name == 'adamw' else torch.optim.Adam
         optimizer = Class_optimizer(model_params, lr=lr, betas=(

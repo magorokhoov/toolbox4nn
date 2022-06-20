@@ -3,10 +3,6 @@
 # Mikhail Gorokhov
 # Coding custom NN toolbox
 
-#import torch
-#import torch.nn as nn
-#import torch.nn.functional as F
-
 import os
 import time
 import argparse
@@ -15,18 +11,19 @@ import options
 import math
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
-
 
 from tqdm import tqdm
 from tqdm import tqdm_notebook
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 import data
 from modules import base_model
 import modules.networks as networks
 import modules.optimizers as optimizers
 import modules.losses as losses
-
 from utils import utils
 
 

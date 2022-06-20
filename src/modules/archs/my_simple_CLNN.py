@@ -36,8 +36,6 @@ class my_simple_CLNN(nn.Module):
 
     def forward(self, x):
         fea = self.features(x)
-        #b, c, h, w = fea.shape
-        # print(c,h,w)
         out = self.classificator(fea)
         return out
 

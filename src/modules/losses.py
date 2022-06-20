@@ -86,50 +86,6 @@ class ClassificatorLoss(BaseLoss):
         return loss
 
 
-'''
-class LossStats:
-    def __init__(self):
-        pass
-    def
-
-class ClassificatorLoss:
-    def __init__(self, option_loss: dict):
-        #self.option_loss = option_loss
-
-        func_type = option_loss.get('func_type', None)
-        weight = option_loss.get('weight', 1.0)
-        reduction = option_loss.get('reduction', 'mean')
-
-        if func_type is None:
-            raise NameError('func_type cannot be None. Set CrossEntropyLoss or something else')
-
-        self.last_stats = {}
-        self.funcs = []
-
-        func = get_loss_func(func_type, weight, reduction=reduction)
-        self.funcs += [func]
-
-    def calc_total_loss(self, pred, target):
-        if not isinstance(pred, torch.Tensor):
-            raise TypeError(f'pred not right type. Type of target is {type(target)}')
-        if not isinstance(target, torch.Tensor):
-            raise TypeError(f'target not right type. Type of target is {type(target)}')
-
-        total_loss = 0.0
-        for func in self.funcs:
-            loss = func['func'](pred, target) * func['weight']
-            total_loss += loss
-            self.last_stats[func['func_type']] = loss.item()
-
-        self.last_stats['total_loss'] = total_loss.item()
-
-        return total_loss
-
-    def get_last_stats(self) -> dict:
-        return self.last_stats.copy()
-'''
-
-
 def get_loss_func(
         func_type,
         weight,
@@ -156,43 +112,10 @@ def get_loss_func(
         loss_function = nn.BCEWithLogitsLoss(reduction=reduction)
     else:
         raise NotImplementedError(
-            f'Loss type [{name}] is not recognized. losses.py doesn\'t know {[name]}')
+            f'Loss type [{func_type}] is not recognized. losses.py doesn\'t know {[func_type]}')
 
     return {'func_type': func_type,
             'weight': weight,
             'func': loss_function
             }
-
-
-'''
-class Losser: # but not loser...
-    def __init__(self, option_loss: dict):
-        self.loss_list = self.get_loss_list(option_loss)
-        self.loss_log_dict = {}
-
-    def get_loss_results(self, x:torch.Tensor, y:torch.Tensor):
-
-        loss_result = 0.0
-        for loss in self.loss_list:
-            #print(loss)
-            #print(loss['weight'], type(loss['weight']))
-            current_loss = loss['weight']*loss['function'](x, y)
-            loss_result += current_loss
-            self.loss_log_dict[loss['loss_type']] = current_loss.item()
-
-        return loss_result
-
-    def get_loss_list(self, option_loss: dict):
-        pixel_criterion = option_loss.get('pixel_criterion', None)
-        pixel_weight = option_loss.get('pixel_weight', 0.0)
-        pixel_alpha = option_loss.get('pixel_alpha', 0.0)
-
-
-        loss_list = []
-
-        if pixel_criterion is not None and pixel_weight > 0.0:
-            pixel_loss = self.get_loss_func(pixel_criterion, pixel_weight, alpha=pixel_alpha)
-            loss_list += [pixel_loss]
-
-        return loss_list
-'''
+            

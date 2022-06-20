@@ -16,8 +16,7 @@ from utils import utils
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-option', type=str, required=True,
-                        help='Path to options file.')
+    parser.add_argument('-option', type=str, required=True, help='Path to options file.')
     args = parser.parse_args()
     print(args.option)
     option_path = args.option
@@ -28,8 +27,8 @@ def main():
     with open(option_path, 'r') as file_option:
         option = yaml.safe_load(file_option)
 
-    #path_log_file = option['logger'].get('path_log_file')
-    #logger = get_root_logger('base', root=path_log_file, phase='train', screen=True, tofile=True)
+    # path_log_file = option['logger'].get('path_log_file')
+    # logger = get_root_logger('base', root=path_log_file, phase='train', screen=True, tofile=True)
     task = option.get('task')
     if task == 'classification':
         model = Classificator(option)

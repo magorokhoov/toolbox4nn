@@ -18,7 +18,7 @@ def get_network(option_network: dict):
     arch = option_network.get('arch', None)
     if arch is None:
         raise NotImplementedError(
-            f'Neural Network is None. Please, add arch to config file')
+            'Neural Network is None. Please, add arch to config file')
 
     arch = arch.lower()
     if arch == 'my_simple_CLNN'.lower():

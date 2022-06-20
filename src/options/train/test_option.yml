@@ -29,10 +29,13 @@ networks:
       lr: 1e-3
 
     scheduler:
-      name: linear
-      end_factor: 0.2
-      total_iters: 1
-      step_freq: 1
+      #scheme: linear
+      #end_factor: 0.2
+
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      gamma: 0.5
 
 
 weights: 
