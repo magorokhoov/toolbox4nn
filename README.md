@@ -3,6 +3,11 @@ Toolbox4nn is PyTorch framework for research and developing. Priority is CV (cla
 
 *In near future I will make awesome readme and docs*
 
+## How to start?
+
+1. Config your yaml config file in options
+2. python train.py -option <your config> 
+
 ## Project Structure
 
 ```
