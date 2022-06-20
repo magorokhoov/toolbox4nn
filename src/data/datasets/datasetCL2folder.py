@@ -1,10 +1,10 @@
+import os
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import os
-import numpy as np
-import cv2
 
 from utils import utils
 
@@ -19,7 +19,6 @@ class DatasetCL2folder(torch.utils.data.Dataset):
         self.listdir2 = sorted(os.listdir(self.path_dir2))
 
     def __getitem__(self, index):
-
         id_class = 0
         if len(self.listdir1) <= index:
             id_class += 1

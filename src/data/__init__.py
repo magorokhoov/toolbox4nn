@@ -12,7 +12,7 @@ def create_dataset(option_ds: dict) -> Dataset:
     name = option_ds['name'].lower()
 
     if name == 'datasetcl2folder':
-        from data.datasetCL2folder import DatasetCL2folder as D
+        from data.datasets.datasetCL2folder import DatasetCL2folder as D
     else:
         raise NotImplementedError(f'Dataset [{name:s}] is not recognized.')
 
