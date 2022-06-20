@@ -18,7 +18,7 @@ def npimg2tensor(img):
 
 
 def get_norm_img(img):
-    return img.astype(np.float32) / 256.0 
+    return img.astype(np.float32) / 256.0
 
 
 def get_scaled(img, shape):
@@ -64,12 +64,9 @@ def get_root_logger(
     # if the logger has been initialized, just return the base logger
     if not logger_name and logger.hasHandlers():
         return logger
-    # else:
-    #    print('lol')
 
     formatter = logging.Formatter(
-        '[%(asctime)s] %(levelname)s: %(message)s',
-        datefmt='%d-%b-%Y-%a %H:%M:%S')
+        '[%(asctime)s] %(levelname)s: %(message)s', datefmt='%d-%b-%Y-%a %H:%M:%S')
     logger.setLevel(level)
 
     if tofile:
@@ -85,11 +82,14 @@ def get_root_logger(
     return logger
 
 
-def sorted_nicely(l):
-    def convert(text): return int(text) if text.isdigit() else text
-    def alphanum_key(key): return [convert(c)
-                                   for c in re.split('([0-9]+)', key)]
-    return sorted(l, key=alphanum_key)
+def sorted_nicely(lst: list):
+    def convert(text):
+        return int(text) if text.isdigit() else text
+
+    def alphanum_key(key):
+        return [convert(c) for c in re.split('([0-9]+)', key)]
+
+    return sorted(lst, key=alphanum_key)
 
 
 def dict2str(opt: dict, indent_l: int = 1) -> str:
@@ -105,7 +105,7 @@ def dict2str(opt: dict, indent_l: int = 1) -> str:
     return msg
 
 
-def time_nicer(tm, point_digits=2) -> str:
+def time_nicer(tm:float, point_digits=2) -> str:
     # tm must be in seconds
     if tm >= 60 * 60 * 2:
         tm /= 3600.0
