@@ -1,5 +1,9 @@
 # Toolbox4nn
-Toolbox4nn is PyTorch framework for research and developing. Priority is CV (classification, super-resolution, stylization,  
+Toolbox4nn is PyTorch framework for research and developing. Priority is CV (classification, super-resolution, stylization, restoration, GAN, etc) but i think you can use it for NLP also.
+
+*In near future I will make awesome readme and docs*
+
+## Project Structure
 
 ```
 .
