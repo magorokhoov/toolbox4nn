@@ -18,4 +18,4 @@ Toolbox4nn is PyTorch framework for research and developing. Priority is CV (cla
 ```
 
 
-This project was heavily inspired by [traiNNer](https://github.com/victorca25/traiNNer) (developed by [victorca25](https://github.com/victorca25)). Try this one. They are also have a great Discord server "Enchance Everything". You will find the link in victorca25 rep.
+This project was heavily inspired by [traiNNer](https://github.com/victorca25/traiNNer) (developed by [victorca25](https://github.com/victorca25)). Try this one. They are also have a great Discord server "Enchance Everything". You will find the link in victorca25 rep. 
