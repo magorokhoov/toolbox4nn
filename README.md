@@ -1,7 +1,7 @@
 # Toolbox4nn
 Toolbox4nn
 
-```bash
+`
 .
 ├── experiments -- here will be your reslt of experiments (logs, model weights, val_images, etc) 
 └── src -- main code
@@ -11,4 +11,4 @@ Toolbox4nn
     ├── sh -- sh files start if you use linux like me
     ├── train.py -- main file
     └── utils -- useful stuff like loggers, nicer_timer, dict2str, etc
-```
+`
