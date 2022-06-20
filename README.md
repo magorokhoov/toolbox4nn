@@ -7,7 +7,7 @@ Toolbox4nn is PyTorch framework for research and developing. Priority is CV (cla
 
 ```
 .
-├── experiments -- here will be your reslt of experiments (logs, model weights, val_images, etc) 
+├── experiments -- here will be your result of training/tests (logs, model weights, val_images, etc) 
 └── src -- main code
     ├── data -- datasets and dataloaders
     ├── modules -- losses, models, optimizers, schedulers, metrics (not implemented now), etc
