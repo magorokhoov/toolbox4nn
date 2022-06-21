@@ -1,1 +1,1 @@
-python train.py -option ./options/train/test_option.yml
+python train.py -option ./options/train/example_classification.yml
