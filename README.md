@@ -40,10 +40,10 @@ task: autoencoder
 gpu_ids: [0]
 dataset:
   name: img
-  path_dir: '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/cats/'
-  #path_dir2:  '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/dogs/'
-  #path_test1: '/home/manavendra/homeNN/Datasets/cats_dogs/test_set/cats/'
-  #path_test2: '/home/manavendra/homeNN/Datasets/cats_dogs/test_set/dogs/'
+  path_dir: '../Datasets/cats_dogs/training_set/cats/'
+  #path_dir2:  '../Datasets/cats_dogs/training_set/dogs/'
+  #path_test1: '../Datasets/cats_dogs/test_set/cats/'
+  #path_test2: '../Datasets/cats_dogs/test_set/dogs/'
   batch_size: 16
   shuffle: True
   num_workers: 4
@@ -119,7 +119,15 @@ logger:
 [21-Jun-2022-Tue 23:35:47] INFO: <epoch: 1, iter: 100, DT=79.76s, ET=78.43m> | ae: <lr: 1.000e-03; pixel_l1: 8.8053e-02, tv_2: 8.7199e-06> 
 [21-Jun-2022-Tue 23:36:51] INFO: <epoch: 1, iter: 200, DT=63.63s, ET=61.50m> | ae: <lr: 1.000e-03; pixel_l1: 4.8637e-02, tv_2: 1.0024e-05> 
 [21-Jun-2022-Tue 23:37:55] INFO: <epoch: 2, iter: 300, DT=64.10s, ET=60.90m> | ae: <lr: 1.000e-03; pixel_l1: 3.3224e-02, tv_2: 1.3036e-05> 
-[21-Jun-2022-Tue 23:38:59] INFO: <epoch: 2, iter: 400, DT=64.02s, ET=59.75m> | ae: <lr: 1.000e-03; pixel_l1: 2.9164e-02, tv_2: 1.6492e-05>
+[21-Jun-2022-Tue 23:38:59] INFO: <epoch: 2, iter: 400, DT=64.02s, ET=59.75m> | ae: <lr: 1.000e-03; pixel_l1: 2.9164e-02, tv_2: 1.6492e-05> 
+[21-Jun-2022-Tue 23:40:03] INFO: <epoch: 2, iter: 500, DT=64.24s, ET=58.89m> | ae: <lr: 1.000e-03; pixel_l1: 2.9443e-02, tv_2: 1.9946e-05> 
+[21-Jun-2022-Tue 23:41:07] INFO: <epoch: 3, iter: 600, DT=64.44s, ET=57.99m> | ae: <lr: 1.000e-03; pixel_l1: 2.1672e-02, tv_2: 2.1197e-05> 
+[21-Jun-2022-Tue 23:42:11] INFO: <epoch: 3, iter: 700, DT=64.05s, ET=56.58m> | ae: <lr: 1.000e-03; pixel_l1: 2.1862e-02, tv_2: 2.1767e-05> 
+[21-Jun-2022-Tue 23:43:16] INFO: <epoch: 4, iter: 800, DT=64.24s, ET=55.67m> | ae: <lr: 1.000e-03; pixel_l1: 2.1336e-02, tv_2: 2.3277e-05> 
+[21-Jun-2022-Tue 23:44:20] INFO: <epoch: 4, iter: 900, DT=63.89s, ET=54.31m> | ae: <lr: 1.000e-03; pixel_l1: 2.1615e-02, tv_2: 2.4749e-05> 
+[21-Jun-2022-Tue 23:45:24] INFO: <epoch: 4, iter: 1000, DT=64.00s, ET=53.33m> | ae: <lr: 1.000e-03; pixel_l1: 1.9092e-02, tv_2: 2.6496e-05> 
+[21-Jun-2022-Tue 23:45:24] INFO: Checkpoint. Saving models...
+[21-Jun-2022-Tue 23:46:28] INFO: <epoch: 5, iter: 1100, DT=64.66s, ET=52.80m> | ae: <lr: 1.000e-03; pixel_l1: 1.8832e-02, tv_2: 2.7449e-05>
 ```
 
 ## Last but not least
