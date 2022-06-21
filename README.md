@@ -3,6 +3,8 @@ Toolbox4nn is PyTorch framework for research and developing. Priority is CV (cla
 
 *In near future I will make awesome readme and docs*
 
+Let's be in touch! Join to our [Discord server](https://discord.gg/wm2dbNYAQE)!
+
 ### Implemented Tasks
 1. Classification
 2. Autoencoding
