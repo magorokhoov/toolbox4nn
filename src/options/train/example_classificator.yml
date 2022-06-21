@@ -13,14 +13,16 @@ dataset:
 
 networks:
   classificator:
-    arch: my_simple_CLNN
+    arch: mysimpleCLNN
     in_nc: 3
     mid_nc: 16
     out_nc: 2
 
+    losser_type: class
     loss:
-      func_type: CrossEntropyLoss
-      weight: 1.0
+      class:
+        criterion: {criterion_type: CrossEntropyLoss}
+        weight: 1.0
 
     optimizer:
       name: adam

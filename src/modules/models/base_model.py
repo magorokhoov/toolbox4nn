@@ -15,7 +15,7 @@ import torch.nn.functional as F
 
 import data
 import options
-import modules.losses as losses
+import modules.losser as losser
 import modules.networks as networks
 import modules.optimizers as optimizers
 import modules.schedulers as schedulers
@@ -75,15 +75,17 @@ class BaseModel:
 
             # Optimizator
             option_optimizer = option_network.get('optimizer')
-
-            if option_optimizer == 'global':
-                option_optimizer = option.get('optimizer')
+            if option_optimizer is 'global':
+                option_optimizer = option['optimizer']
 
             self.optimizers[network_name] = optimizers.get_optimizer(
                 self.networks[network_name].parameters(), option_optimizer)
-            # TODO: make scheduler getter
+
 
             option_scheduler = option_network.get('scheduler')
+            if option_scheduler is 'global':
+                option_scheduler = option['scheduler']
+
             optimizer = self.optimizers[network_name]
             self.schedulers[network_name] = schedulers.get_scheduler(
                 optimizer=optimizer,
@@ -95,7 +97,11 @@ class BaseModel:
             # Loss
             # TODO: make losser getter
             option_loss = option_network.get('loss')
-            self.lossers[network_name] = losses.ClassificatorLoss(option_loss)
+            if option_loss is 'global':
+                option_loss = option['loss']
+
+            losser_type = option_network.get('losser_type')
+            self.lossers[network_name] = losser.get_losser(losser_type, option_loss=option_loss)
 
         # Load Model
         if option_weights is not None:

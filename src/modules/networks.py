@@ -21,8 +21,8 @@ def get_network(option_network: dict):
             'Neural Network is None. Please, add arch to config file')
 
     arch = arch.lower()
-    if arch == 'my_simple_CLNN'.lower():
-        from modules.archs.my_simple_CLNN import my_simple_CLNN as network
+    if arch == 'mysimpleCLNN'.lower():
+        from modules.archs.mysimpleCLNN import MySimpleCLNN as network
     else:
         raise NotImplementedError(
             f'Neural Network [{arch}] is not recognized. networks.py doesn\'t know {[arch]}')

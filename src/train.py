@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import yaml
 from tqdm import tqdm, tqdm_notebook
 
-from modules.models.classificator import Classificator
+from modules.models import (classificator, autoencoder)
 from utils import utils
 
 
@@ -31,11 +31,13 @@ def main():
     # logger = get_root_logger('base', root=path_log_file, phase='train', screen=True, tofile=True)
     task = option.get('task')
     if task == 'classification':
-        model = Classificator(option)
-        model.train()
+        model = classificator.Classificator(option)
+    elif task == 'autoencoder':
+        model = autoencoder.AutoEncoder(option)
     else:
-        raise NotImplementedError(f'NNToolBox don\'t know [{task}]')
+        raise NotImplementedError(f'Toolbox4nn don\'t know [{task}]')
 
+    model.train()
 
 if __name__ == '__main__':
     main()

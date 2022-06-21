@@ -25,7 +25,7 @@ import data
 
 import modules.networks as networks
 import modules.optimizers as optimizers
-import modules.losses as losses
+import modules.losser as losser
 
 
 from modules.models import base_model

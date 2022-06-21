@@ -7,23 +7,20 @@ import os
 import time
 import argparse
 import yaml
-import options
 import math
 import numpy as np
 import cv2
-
-from tqdm import tqdm
-from tqdm import tqdm_notebook
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 import data
-from modules import base_model
 import modules.networks as networks
 import modules.optimizers as optimizers
-import modules.losses as losses
+import modules.losser as losser
+from modules.models import base_model
+
 from utils import utils
 
 
@@ -39,10 +36,9 @@ class AutoEncoder(base_model.BaseModel):
             img_A.cuda()
             img_B.cuda()
 
-        img_pred = self.networks['ae_1'](img_A)
+        img_pred = self.networks['autoencoder'](img_A)
         for losser_name in self.lossers:
-            self.losses[losser_name] = self.lossers[losser_name](
-                img_pred, img_B)
+            self.losses[losser_name] = self.lossers[losser_name](img_pred, img_B)
 
         # optimizers_zero_grad()
         # losses_backward()

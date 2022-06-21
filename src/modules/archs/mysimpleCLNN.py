@@ -6,9 +6,9 @@ import os
 import numpy as np
 
 
-class my_simple_CLNN(nn.Module):
+class MySimpleCLNN(nn.Module):
     def __init__(self, option_arch: dict):
-        super(my_simple_CLNN, self).__init__()
+        super(MySimpleCLNN, self).__init__()
 
         in_nc = option_arch.get('in_nc')
         mid_nc = option_arch.get('mid_nc')
