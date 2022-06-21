@@ -27,10 +27,10 @@ class SimpleAEUnet(nn.Module):
         self.convdown_3 = nn.Conv2d(4 * mid_nc, 8 * mid_nc, kernel_size=3, stride=2, padding=1)  # 8x, 16
 
         self.blockup_3 = blocks.UpBlock(2*mid_nc, 4*mid_nc, up_type='shuffle')
-        self.conv_de2_1_1x1 = nn.Conv2d(4 * mid_nc, 2 * mid_nc, kernel_size=1)  # 4x, 32
+        self.conv_de2_1_1x1 = nn.Conv2d(4 * mid_nc, 4 * mid_nc, kernel_size=1)  # 4x, 32
         self.conv_de2_1 = nn.Conv2d(4 * mid_nc, 4 * mid_nc, kernel_size=3, stride=1, padding=1)  # 4x, 32
         self.blockup_2 = blocks.UpBlock(mid_nc, 2*mid_nc, up_type='shuffle')
-        self.conv_de1_1_1x1 = nn.Conv2d(4 * mid_nc, 2 * mid_nc, kernel_size=1)  # 4x, 32
+        self.conv_de1_1_1x1 = nn.Conv2d(2 * mid_nc, 2 * mid_nc, kernel_size=1)  # 4x, 32
         self.conv_de1_1 = nn.Conv2d(2 * mid_nc, 2 * mid_nc, kernel_size=3, stride=1, padding=1)  # 4x, 32
         self.blockup_1 = blocks.UpBlock(mid_nc//2, mid_nc//2, up_type='shuffle')
 
@@ -54,17 +54,28 @@ class SimpleAEUnet(nn.Module):
         # Decoder
         mid = self.blockup_3(mid)
         mid = self.act(mid)
-        mid = self.conv_de2_1_1x1(torch.cat((mid, mid2), axis=1))
+        mid = mid + self.conv_de2_1_1x1(mid2)
         mid = self.conv_de2_1(mid)
         mid = self.act(mid)
         mid = self.blockup_2(mid)
         mid = self.act(mid)
-        mid = self.conv_de1_1_1x1(torch.cat((mid, mid1), axis=1))
+        mid = mid + self.conv_de1_1_1x1(mid1)
         mid = self.conv_de1_1(mid)
         mid = self.act(mid)
         mid = self.blockup_1(mid)
         mid = self.act(mid)
 
+        mid = self.pad3(mid)
         out = self.lastconv(mid)
 
         return out
+
+    def print_num_parameters(self):
+        num_params_features = sum(p.numel() for p in self.features.parameters())
+        num_params_classficator = sum(p.numel() for p in self.classificator.parameters())
+
+        print(f'Features params: {num_params_features}')
+        print(f'Classificator params: {num_params_classficator}')
+
+    def get_num_parameters(self):
+        return sum(p.numel() for p in self.parameters())

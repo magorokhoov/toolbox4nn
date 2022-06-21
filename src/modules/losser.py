@@ -86,6 +86,11 @@ class Losser(nn.Module):
 
         return total_loss
 
+    
+    def funcs_to_cuda(self) -> None:
+        for i in range(len(self.loss_funcs)):
+            self.loss_funcs[i]['func'] = self.loss_funcs[i]['func'].to('cuda')
+            # print(self.loss_funcs[i]['func'])
 
     def reset_accumulation(self) -> None:
         for accumulation_name in self.accumulation:
@@ -119,20 +124,23 @@ class Losser(nn.Module):
 
 def get_loss_func(loss_type, loss_params: dict):
     option_criterion = loss_params.get('criterion')
-    criterion_type = option_criterion['criterion_type']
+    
 
     if loss_type == 'class':
         loss_func = custom_loss.get_criterion(
             option_criterion=option_criterion)
+        suffix = option_criterion['criterion_type']
     elif loss_type == 'pixel':
         loss_func = custom_loss.get_criterion(
             option_criterion=option_criterion)
+        suffix = option_criterion['criterion_type']
     elif loss_type == 'tv':
         loss_func = custom_loss.TVLoss(option_criterion=option_criterion)
+        suffix = option_criterion['gamma']
     else:
         raise NotImplementedError(f'loss_type {loss_type} is not implemented')
 
-    loss_name = f'{loss_type}_{criterion_type}'
+    loss_name = f'{loss_type}_{suffix}'
     weight = loss_params['weight']
 
     return {'loss_name': loss_name,

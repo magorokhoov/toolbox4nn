@@ -16,6 +16,11 @@ def npimg2tensor(img):
     tensor = torch.from_numpy(tensor)
     return tensor
 
+def tensor2npimg(tensor):
+    img = tensor.numpy()
+    img = np.transpose(img, (1, 2, 0))
+    return img
+
 
 def get_norm_img(img):
     return img.astype(np.float32) / 256.0

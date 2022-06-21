@@ -3,6 +3,7 @@
 # Mikhail Gorokhov
 # Coding custom NN toolbox
 
+from turtle import forward
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,6 +18,7 @@ import matplotlib.pyplot as plt
 
 from tqdm import tqdm
 from tqdm import tqdm_notebook
+from zmq import device
 
 import data
 import modules.networks
@@ -73,5 +75,13 @@ class ElasticLoss(nn.Module):
         return loss
 
 class TVLoss(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, option_criterion: dict) -> None:
         super().__init__()
+
+        self.gamma = option_criterion.get('gamma', 2)
+
+    def forward(self, x):
+        b, c, h, w = x.size()
+        tv_h = torch.pow(x[:,:,1:,:]-x[:,:,:-1,:], self.gamma).sum()
+        tv_w = torch.pow(x[:,:,:,1:]-x[:,:,:,:-1], self.gamma).sum()
+        return (tv_h+tv_w)/(b*c*h*w)

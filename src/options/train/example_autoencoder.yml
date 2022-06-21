@@ -1,30 +1,31 @@
 name: ae_21jun2022
 task: autoencoder
-gpu_ids: []
+gpu_ids: [0]
 dataset:
-  name: a2b
-  path_dir1: '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/cats/'
-  path_dir2:  '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/dogs/'
+  name: img
+  path_dir: '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/cats/'
+  #path_dir2:  '/home/manavendra/homeNN/Datasets/cats_dogs/training_set/dogs/'
   #path_test1: '/home/manavendra/homeNN/Datasets/cats_dogs/test_set/cats/'
   #path_test2: '/home/manavendra/homeNN/Datasets/cats_dogs/test_set/dogs/'
-  batch_size: 32
+  batch_size: 16
   shuffle: True
   num_workers: 4
 
 networks:
-  autoencoder:
-    arch: mysimpleCLNN
+  ae:
+    arch: SimpleAEUnet
     in_nc: 3
     mid_nc: 32
     out_nc: 3
 
+    losser_type: image
     loss:
       pixel:
-        criterion: {criterion_type: l1, alpha: 0.5, beta: 0.7}
+        criterion: {criterion_type: l1}
         weight: 1.0
       tv:
-        criterion: {criterion_type: l1}
-        weight: 0.002
+        criterion: {gamma: 2}
+        weight: 0.01
 
     optimizer:
       name: adam
@@ -43,24 +44,25 @@ networks:
 
 
 weights: 
-  #classificator: '../experiments/classificator_18jun2022sun/models/classificator.pth'
+  ae: '../experiments/ae_21jun2022/models/ae.pth'
 
 experiments:
   root: '../experiments/'
   checkpoint_freq: 1000
+  display_freq: 50
 
 train:
-  n_iters: 8000
+  n_iters: 6000
   
-loss:
-  func_type: CrossEntropyLoss
-  weight: 1.0
+#loss:
+#  func_type: CrossEntropyLoss
+#  weight: 1.0
   #reduction: mean
   #pixel_criterion: l2
   #pixel_weight: 100.0
 
 logger:
-  print_freq: 10
+  print_freq: 100
   save_log_file: True
   #path_log_file: '../logs'
-  
+   

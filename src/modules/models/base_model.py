@@ -35,13 +35,13 @@ class BaseModel:
 
         self.checkpoint_freq = option_experiments.get('checkpoint_freq')
         self.experiments_root = option_experiments.get('root')
-        if not os.path.isdir(self.experiments_root):
-            os.mkdir(self.experiments_root)
+        
+        utils.mkdir(self.experiments_root)
 
         self.experiment_dir_path = os.path.join(
             self.experiments_root, self.name)
-        if not os.path.isdir(self.experiment_dir_path):
-            os.mkdir(self.experiment_dir_path)
+
+        utils.mkdir(self.experiment_dir_path)
 
         # Logger
         self.logger = utils.get_root_logger(
@@ -109,6 +109,7 @@ class BaseModel:
 
         if len(gpu_ids) != 0:
             self.networks_to_cuda()
+            self.lossers_to_cuda()
 
     def train_step(self) -> None:
         # self.sample
@@ -122,7 +123,7 @@ class BaseModel:
 
     def train(self) -> None:
         time_start = time.time()
-        time_print_freq = time.time()
+        time_last_iter = time.time()
         n_epochs = math.ceil(self.n_iters / len(self.dataloader))
 
         self.logger.info(f'Dataset has {len(self.dataloader.dataset)} images')
@@ -138,18 +139,20 @@ class BaseModel:
             for epoch in range(1, n_epochs + 1):
                 for self.sample in self.dataloader:
 
-                    self.train_step()
+                    self.train_step(iter=i)
 
                     self.optimizers_zero_grad()
                     self.losses_backward()
                     self.optimizers_step()
 
-                    # Estimated Time
-                    et = ((time.time() - time_start) * (self.n_iters - i) / i)
+                    
 
                     if i % self.print_freq == 0:
-                        dtime_print_freq = time.time() - time_print_freq
-                        time_print_freq = time.time()
+                        # Estimated Time
+                        et = ((time.time() - time_last_iter) / (self.print_freq) * (self.n_iters - i) )
+
+                        dtime_print_freq = time.time() - time_last_iter
+                        time_last_iter = time.time()
 
                         time_string = f'DT={utils.time_nicer(dtime_print_freq)}, ET={utils.time_nicer(et)}'
                         info_str = self.logger_info_networks()
@@ -205,7 +208,12 @@ class BaseModel:
 
     def networks_to_cuda(self) -> None:
         for network_name in self.networks:
-            self.networks[network_name].cuda()
+            self.networks[network_name] = self.networks[network_name].cuda()
+
+    def lossers_to_cuda(self) -> None:
+        for losser_name in self.lossers:
+            self.lossers[losser_name] = self.lossers[losser_name].to('cuda')
+            self.lossers[losser_name].funcs_to_cuda()
 
     def save_models(self, iteration=0, is_last: bool = False) -> None:
         self.logger.info('Checkpoint. Saving models...')
@@ -232,3 +240,4 @@ class BaseModel:
             if network_path is not None:
                 self.networks[network_name].load_state_dict(
                     torch.load(network_path))
+        self.logger.info('All models have been loaded!')
