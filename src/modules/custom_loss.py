@@ -82,6 +82,12 @@ class TVLoss(nn.Module):
 
     def forward(self, x):
         b, c, h, w = x.size()
-        tv_h = torch.pow(x[:,:,1:,:]-x[:,:,:-1,:], self.gamma).sum()
-        tv_w = torch.pow(x[:,:,:,1:]-x[:,:,:,:-1], self.gamma).sum()
-        return (tv_h+tv_w)/(b*c*h*w)
+        tv_h = torch.pow(x[:,:,1:,:]-x[:,:,:-1,:], 2).sum()
+        tv_w = torch.pow(x[:,:,:,1:]-x[:,:,:,:-1], 2).sum()
+
+        if self.gamma != 2:
+            tv = torch.pow(tv_h+tv_w, self.gamma/2.0)
+        else:
+            tv = tv_h+tv_w
+
+        return tv/(b*c*h*w)

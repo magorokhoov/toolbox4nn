@@ -47,6 +47,10 @@ class Classificator(base_model.BaseModel):
         for losser_name in self.lossers:
             self.losses[losser_name] = self.lossers[losser_name](pred, label)
 
+        self.optimizers_zero_grad()
+        self.losses_backward()
+        self.optimizers_step()
+        
         # optimizers_zero_grad()
         # losses_backward()
         # optimizers_step()

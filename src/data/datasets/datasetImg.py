@@ -22,7 +22,7 @@ class DatasetImg(torch.utils.data.Dataset):
 
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
 
-        img = utils.get_scaled(img, (256, 256))
+        # img = utils.get_scaled(img, (256, 256))
         img = utils.get_norm_img(img)
 
 

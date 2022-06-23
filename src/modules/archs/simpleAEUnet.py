@@ -25,41 +25,55 @@ class SimpleAEUnet(nn.Module):
         self.convdown_2 = nn.Conv2d(2 * mid_nc, 4 * mid_nc, kernel_size=3, stride=2, padding=1)  # 4x, 32
         self.conv_en2_1 = nn.Conv2d(4 * mid_nc, 4 * mid_nc, kernel_size=3, stride=1, padding=1)  # 4x, 32
         self.convdown_3 = nn.Conv2d(4 * mid_nc, 8 * mid_nc, kernel_size=3, stride=2, padding=1)  # 8x, 16
+        self.conv_en3_1 = nn.Conv2d(8 * mid_nc, 8 * mid_nc, kernel_size=3, stride=1, padding=1)  # 8x, 16
+        self.convdown_4 = nn.Conv2d(8 * mid_nc, 16 * mid_nc, kernel_size=3, stride=2, padding=1)  # 16x, 8
 
+        self.blockup_4 = blocks.UpBlock(4*mid_nc, 8*mid_nc, up_type='shuffle')
+        self.conv_de3_1 = nn.Conv2d(8 * mid_nc, 8 * mid_nc, kernel_size=3, stride=1, padding=1)  # 8x, 16
         self.blockup_3 = blocks.UpBlock(2*mid_nc, 4*mid_nc, up_type='shuffle')
         self.conv_de2_1_1x1 = nn.Conv2d(4 * mid_nc, 4 * mid_nc, kernel_size=1)  # 4x, 32
         self.conv_de2_1 = nn.Conv2d(4 * mid_nc, 4 * mid_nc, kernel_size=3, stride=1, padding=1)  # 4x, 32
         self.blockup_2 = blocks.UpBlock(mid_nc, 2*mid_nc, up_type='shuffle')
         self.conv_de1_1_1x1 = nn.Conv2d(2 * mid_nc, 2 * mid_nc, kernel_size=1)  # 4x, 32
-        self.conv_de1_1 = nn.Conv2d(2 * mid_nc, 2 * mid_nc, kernel_size=3, stride=1, padding=1)  # 4x, 32
+        self.conv_de1_1 = nn.Conv2d(2 * mid_nc, 2 * mid_nc, kernel_size=3, stride=1, padding=1)  # 2x, 64
         self.blockup_1 = blocks.UpBlock(mid_nc//2, mid_nc//2, up_type='shuffle')
 
         self.lastconv = nn.Conv2d(mid_nc//2, out_nc, kernel_size=7, padding=0)
 
     def forward(self, x):
+
+        # Encoder
         mid = self.pad3(x)
         mid = self.convdown_1(mid)
         mid = self.act(mid)
         mid = self.conv_en1_1(mid)
         mid = self.act(mid)
-        mid1 = mid
+        # mid1 = mid
         mid = self.convdown_2(mid)
         mid = self.act(mid)
         mid = self.conv_en2_1(mid)
         mid = self.act(mid)
-        mid2 = mid
+        # mid2 = mid
         mid = self.convdown_3(mid)
+        mid = self.act(mid)
+        mid = self.conv_en3_1(mid)
+        mid = self.act(mid)
+        mid = self.convdown_4(mid)
         mid = self.act(mid)
 
         # Decoder
+        mid = self.blockup_4(mid)
+        mid = self.act(mid)
+        mid = self.conv_de3_1(mid)
+        mid = self.act(mid)
         mid = self.blockup_3(mid)
         mid = self.act(mid)
-        mid = mid + self.conv_de2_1_1x1(mid2)
+        # mid = mid + self.conv_de2_1_1x1(mid2)
         mid = self.conv_de2_1(mid)
         mid = self.act(mid)
         mid = self.blockup_2(mid)
         mid = self.act(mid)
-        mid = mid + self.conv_de1_1_1x1(mid1)
+        # mid = mid + self.conv_de1_1_1x1(mid1)
         mid = self.conv_de1_1(mid)
         mid = self.act(mid)
         mid = self.blockup_1(mid)

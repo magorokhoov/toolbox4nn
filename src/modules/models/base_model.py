@@ -14,7 +14,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import data
-import options
 import modules.losser as losser
 import modules.networks as networks
 import modules.optimizers as optimizers
@@ -51,7 +50,7 @@ class BaseModel:
             screen=True,
             tofile=True)
         self.logger.info(utils.dict2str(option))
-        self.logger.info('Classificator initialization...')
+        self.logger.info('Training initialization...')
         self.print_freq = option_logger.get('print_freq')
 
         # Logger end
@@ -73,9 +72,25 @@ class BaseModel:
             option_network = option_networks.get(network_name)
             self.networks[network_name] = networks.get_network(option_network)
 
+            # Loss
+            # TODO: make losser getter
+            option_loss = option_network.get('loss')
+            if option_loss == 'global':
+                option_loss = option['loss']
+
+            loss_item_freq = option_logger.get('loss_item_freq', 1)
+            losser_type = option_network.get('losser_type')
+            self.lossers[network_name] = losser.get_losser(losser_type, option_loss=option_loss, item_freq=loss_item_freq)
+
+            # To CUDA if needed
+            if len(gpu_ids) != 0:
+                self.networks[network_name] = self.networks[network_name].cuda()
+                self.lossers[network_name] = self.lossers[network_name].cuda()
+                self.lossers[network_name].funcs_to_cuda()            
+
             # Optimizator
             option_optimizer = option_network.get('optimizer')
-            if option_optimizer is 'global':
+            if option_optimizer == 'global':
                 option_optimizer = option['optimizer']
 
             self.optimizers[network_name] = optimizers.get_optimizer(
@@ -83,7 +98,7 @@ class BaseModel:
 
 
             option_scheduler = option_network.get('scheduler')
-            if option_scheduler is 'global':
+            if option_scheduler == 'global':
                 option_scheduler = option['scheduler']
 
             optimizer = self.optimizers[network_name]
@@ -94,14 +109,7 @@ class BaseModel:
             
             #option_scheduler.get('milestones_rel')
 
-            # Loss
-            # TODO: make losser getter
-            option_loss = option_network.get('loss')
-            if option_loss is 'global':
-                option_loss = option['loss']
 
-            losser_type = option_network.get('losser_type')
-            self.lossers[network_name] = losser.get_losser(losser_type, option_loss=option_loss)
 
         # Load Model
         if option_weights is not None:
@@ -139,13 +147,7 @@ class BaseModel:
             for epoch in range(1, n_epochs + 1):
                 for self.sample in self.dataloader:
 
-                    self.train_step(iter=i)
-
-                    self.optimizers_zero_grad()
-                    self.losses_backward()
-                    self.optimizers_step()
-
-                    
+                    self.train_step(iter=i)        
 
                     if i % self.print_freq == 0:
                         # Estimated Time
@@ -173,7 +175,7 @@ class BaseModel:
                 f'Training interrupted. Latest models are saving at epoch: {epoch}, iter: {i} ')
         finally:
             self.save_models(iteration=i, is_last=True)
-            self.logger.info('Training Classificator is ending...')
+            self.logger.info('Training is ending...')
 
     def logger_info_networks(self) -> str:
         info_str = ''
@@ -239,5 +241,6 @@ class BaseModel:
 
             if network_path is not None:
                 self.networks[network_name].load_state_dict(
-                    torch.load(network_path))
+                    torch.load(network_path),
+                    strict=False)
         self.logger.info('All models have been loaded!')

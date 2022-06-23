@@ -49,9 +49,10 @@ class AutoEncoder(base_model.BaseModel):
         if iter % self.display_freq == 0:
             self.display_images(iter=iter, images_list=[img_A.detach().cpu(), img_B.detach().cpu(), img_pred.detach().cpu()])
 
-        # optimizers_zero_grad()
-        # losses_backward()
-        # optimizers_step()
+        self.optimizers_zero_grad()
+        self.losses_backward()
+        self.optimizers_step()
+        
         # schedulers_step()
 
     def display_images(self, iter: int, images_list: list):

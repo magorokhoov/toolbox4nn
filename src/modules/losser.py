@@ -23,14 +23,14 @@ from utils import utils
 import modules.custom_loss as custom_loss
 
 
-def get_losser(losser_type, option_loss: dict):
+def get_losser(losser_type, option_loss: dict, item_freq: int=1):
     if losser_type is None:
         raise NotImplementedError(
             'losser_type is None. Please, add losser_type to config file')
 
     losser_type = losser_type.lower()
     if losser_type in ('class', 'image'):
-        losser = Losser(option_loss)
+        losser = Losser(option_loss, item_freq=item_freq)
     else:
         raise NotImplementedError(
             f'losser_type [{losser_type}] is not implemented')
@@ -39,20 +39,22 @@ def get_losser(losser_type, option_loss: dict):
 
 
 class Losser(nn.Module):
-    def __init__(self, option_loss: dict):
+    def __init__(self, option_loss: dict, item_freq: int=1):
         super(Losser, self).__init__()
         self.option_loss = option_loss
 
         self.loss_funcs = []
-        for loss_type in self.option_loss:
-            loss_params = self.option_loss.get(loss_type)
-            func = get_loss_func(loss_type=loss_type, loss_params=loss_params)
+        for loss_name in self.option_loss:
+            loss_params = self.option_loss.get(loss_name)
+            loss_type = self.option_loss['type']
+            func = get_loss_func(loss_name=loss_name, loss_type=loss_type, loss_params=loss_params)
 
             self.loss_funcs += [func]
 
-        self.option_loss = option_loss
         self.n_accumulation = 0.000001
         self.accumulation = {}
+        self.iter = 0
+        self.item_freq = item_freq
 
         for func in self.loss_funcs:
             loss_name = func['loss_name']
@@ -78,11 +80,14 @@ class Losser(nn.Module):
                     f'loss_type {loss_type} is not implemented in Losser forward')
 
             loss *= func['weight']
-            losses_dict[func['loss_name']] = loss.item()
+
+            if self.iter % self.item_freq == 0:
+                losses_dict[func['loss_name']] = loss.item()
 
             total_loss += loss
-
-        self.add_accumulation(add_losses=losses_dict)
+            
+        if self.iter % self.item_freq == 0:
+            self.add_accumulation(add_losses=losses_dict)
 
         return total_loss
 
@@ -122,25 +127,20 @@ class Losser(nn.Module):
         return losses_str
 
 
-def get_loss_func(loss_type, loss_params: dict):
+def get_loss_func(loss_name: str, loss_type: str, loss_params: dict) -> dict:
     option_criterion = loss_params.get('criterion')
     
-
     if loss_type == 'class':
         loss_func = custom_loss.get_criterion(
             option_criterion=option_criterion)
-        suffix = option_criterion['criterion_type']
     elif loss_type == 'pixel':
         loss_func = custom_loss.get_criterion(
             option_criterion=option_criterion)
-        suffix = option_criterion['criterion_type']
     elif loss_type == 'tv':
         loss_func = custom_loss.TVLoss(option_criterion=option_criterion)
-        suffix = option_criterion['gamma']
     else:
         raise NotImplementedError(f'loss_type {loss_type} is not implemented')
 
-    loss_name = f'{loss_type}_{suffix}'
     weight = loss_params['weight']
 
     return {'loss_name': loss_name,
