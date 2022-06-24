@@ -1,28 +1,31 @@
-name: ae2_faces_22jun2022
+name: ae2_faces_no_tv_24jun2022a
 task: autoencoder
 gpu_ids: [0]
+use_amp: False
 dataset:
   name: img
   path_dir: /home/manavendra/homeNN/Datasets/mounted/FFHQ
-  batch_size: 16
+  batch_size: 8
   shuffle: True
   num_workers: 4
 
 networks:
   ae:
-    arch: SimpleAEUnet
+    arch: VggAEUnet
     in_nc: 3
-    mid_nc: 16
+    mid_nc: 32
     out_nc: 3
 
     losser_type: image
     loss:
-      pixel:
+      pix_l1:
+        type: pixel
         criterion: {criterion_type: l1}
         weight: 1.0
-      tv:
-        criterion: {gamma: 2}
-        weight: 0.01
+      #tv_2:
+      #  type: tv
+      #  criterion: {gamma: 1.2}
+      #  weight: 0.001
 
     optimizer:
       name: adam
@@ -38,20 +41,22 @@ networks:
 
       scheme: multistep
       #milestones: []
-      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      milestones_rel: [0.2, 0.4, 0.6, 0.8, 0.9] 
       gamma: 0.5
 
 
 weights: 
-  ae: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  # ae: '../experiments/ae_faces_22jun2022/models/ae.pth'
 
 experiments:
   root: '../experiments/'
-  checkpoint_freq: 2000
+  checkpoint_freq: 5000
   display_freq: 100
 
 train:
-  n_iters: 10000
+  n_iters: 40000
+  mid1_threshold: 5000
+  mid2_threshold: 10000
   
 #loss:
 #  func_type: CrossEntropyLoss
@@ -61,7 +66,8 @@ train:
   #pixel_weight: 100.0
 
 logger:
-  print_freq: 200
+  # loss_item_freq: 5 # Preferably a multiple of print_freq. loss.item() increase GPU-CPU sync. So let's do item() more rarer
+  print_freq: 500
   save_log_file: True
   #path_log_file: '../logs'
    

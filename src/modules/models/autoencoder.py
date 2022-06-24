@@ -42,9 +42,11 @@ class AutoEncoder(base_model.BaseModel):
             img_A = img_A.cuda()
             img_B = img_B.cuda()
 
-        img_pred = self.networks['ae'](img_A)
-        for losser_name in self.lossers:
-            self.losses[losser_name] = self.lossers[losser_name](img_pred, img_B)
+            
+        with self.cast(enabled=self.use_amp):
+            img_pred = self.networks['ae'](img_A)
+            for losser_name in self.lossers:
+                self.losses[losser_name] = self.lossers[losser_name](img_pred, img_B)
 
         if iter % self.display_freq == 0:
             self.display_images(iter=iter, images_list=[img_A.detach().cpu(), img_B.detach().cpu(), img_pred.detach().cpu()])
@@ -52,7 +54,7 @@ class AutoEncoder(base_model.BaseModel):
         self.optimizers_zero_grad()
         self.losses_backward()
         self.optimizers_step()
-        
+
         # schedulers_step()
 
     def display_images(self, iter: int, images_list: list):

@@ -24,7 +24,11 @@ def get_network(option_network: dict):
     if arch == 'mysimpleCLNN'.lower():
         from modules.archs.mysimpleCLNN import MySimpleCLNN as network
     elif arch == 'SimpleAEUnet'.lower():
-        from modules.archs.simpleAEUnet import SimpleAEUnet as network
+        from modules.archs.simpleAEUnet import SimpleAEUnet as network # VggAEUnet
+    elif arch == 'VggAEUnet'.lower():
+        from modules.archs.vggs import VggAEUnet as network # 
+    elif arch == 'VggAE'.lower():
+        from modules.archs.vggs import VggAE as network # 
     else:
         raise NotImplementedError(
             f'Neural Network [{arch}] is not recognized. networks.py doesn\'t know {[arch]}')

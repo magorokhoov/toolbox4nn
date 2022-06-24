@@ -4,6 +4,7 @@ import argparse
 import math
 import os
 import time
+import logging
 
 import cv2
 import yaml
@@ -12,6 +13,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.cuda.amp import autocast, GradScaler
 
 import data
 import modules.losser as losser
@@ -29,6 +31,7 @@ class BaseModel:
         option_networks = option.get('networks')
         option_logger = option.get('logger')
         option_train = option.get('train')
+        self.option_train = option_train
         option_weights = option.get('weights')
         option_experiments = option.get('experiments')
 
@@ -68,6 +71,14 @@ class BaseModel:
         dataset = data.create_dataset(option_ds)
         self.dataloader = data.create_dataloader(dataset, option_ds, gpu_ids)
 
+        self.use_amp = option.get('use_amp', False)
+        self.cast = autocast
+        self.amp_scaler = GradScaler(enabled=self.use_amp)
+        if self.use_amp:
+            self.logger.info('AMP enabled')
+        else:
+            self.logger.info('AMP disabled')
+
         for network_name in option_networks:
             option_network = option_networks.get(network_name)
             self.networks[network_name] = networks.get_network(option_network)
@@ -78,9 +89,8 @@ class BaseModel:
             if option_loss == 'global':
                 option_loss = option['loss']
 
-            loss_item_freq = option_logger.get('loss_item_freq', 1)
             losser_type = option_network.get('losser_type')
-            self.lossers[network_name] = losser.get_losser(losser_type, option_loss=option_loss, item_freq=loss_item_freq)
+            self.lossers[network_name] = losser.get_losser(losser_type, option_loss=option_loss)
 
             # To CUDA if needed
             if len(gpu_ids) != 0:
@@ -189,12 +199,12 @@ class BaseModel:
     def logger_info_networks_params(self) -> None:
         self.logger.info('Neural network parameters: ')
         for network_name in self.networks:
-            self.logger.info(
-                f'{network_name}: {self.networks[network_name].get_num_parameters():,}')
+            num_params = sum(p.numel() for p in self.networks[network_name].parameters())
+            self.logger.info(f'{network_name}: {num_params:,}')
 
     def losses_backward(self) -> None:
         for network_name in self.losses:
-            self.losses[network_name].backward()
+            self.amp_scaler.scale(self.losses[network_name]).backward()
 
     def optimizers_zero_grad(self) -> None:
         for network_name in self.optimizers:
@@ -202,7 +212,8 @@ class BaseModel:
 
     def optimizers_step(self) -> None:
         for network_name in self.optimizers:
-            self.optimizers[network_name].step()
+            self.amp_scaler.step(self.optimizers[network_name])
+            self.amp_scaler.update()
 
     def schedulers_step(self) -> None:
         for network_name in self.schedulers:
@@ -218,7 +229,7 @@ class BaseModel:
             self.lossers[losser_name].funcs_to_cuda()
 
     def save_models(self, iteration=0, is_last: bool = False) -> None:
-        self.logger.info('Checkpoint. Saving models...')
+        self.logger.info('Saving models...')
         self.models_dir_path = os.path.join(self.experiment_dir_path, 'models')
 
         if not os.path.isdir(self.models_dir_path):

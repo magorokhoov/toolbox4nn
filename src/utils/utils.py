@@ -32,6 +32,14 @@ def get_scaled(img, shape):
         np.expand_dims(img, axis=2)
     return img
 
+def get_random_cropped(img, shape):
+    h, w, _ = img.shape
+    rnd_y = random.randint(0, h - shape[0])
+    rnd_x = random.randint(0, w - shape[1])
+
+    return img[rnd_y:rnd_y+shape[0], rnd_x:rnd_x+shape[1]]
+
+
 
 def get_timestamp():
     return datetime.now().strftime('%Y%b%d%a-%H%M%S')

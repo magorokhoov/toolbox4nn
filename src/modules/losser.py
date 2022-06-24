@@ -23,14 +23,14 @@ from utils import utils
 import modules.custom_loss as custom_loss
 
 
-def get_losser(losser_type, option_loss: dict, item_freq: int=1):
+def get_losser(losser_type: str, option_loss: dict):
     if losser_type is None:
         raise NotImplementedError(
             'losser_type is None. Please, add losser_type to config file')
 
     losser_type = losser_type.lower()
     if losser_type in ('class', 'image'):
-        losser = Losser(option_loss, item_freq=item_freq)
+        losser = Losser(option_loss)
     else:
         raise NotImplementedError(
             f'losser_type [{losser_type}] is not implemented')
@@ -39,22 +39,20 @@ def get_losser(losser_type, option_loss: dict, item_freq: int=1):
 
 
 class Losser(nn.Module):
-    def __init__(self, option_loss: dict, item_freq: int=1):
+    def __init__(self, option_loss: dict):
         super(Losser, self).__init__()
         self.option_loss = option_loss
 
         self.loss_funcs = []
         for loss_name in self.option_loss:
             loss_params = self.option_loss.get(loss_name)
-            loss_type = self.option_loss['type']
+            loss_type = loss_params['type']
             func = get_loss_func(loss_name=loss_name, loss_type=loss_type, loss_params=loss_params)
 
             self.loss_funcs += [func]
 
         self.n_accumulation = 0.000001
         self.accumulation = {}
-        self.iter = 0
-        self.item_freq = item_freq
 
         for func in self.loss_funcs:
             loss_name = func['loss_name']
@@ -80,14 +78,11 @@ class Losser(nn.Module):
                     f'loss_type {loss_type} is not implemented in Losser forward')
 
             loss *= func['weight']
-
-            if self.iter % self.item_freq == 0:
-                losses_dict[func['loss_name']] = loss.item()
+            losses_dict[func['loss_name']] = loss.item()
 
             total_loss += loss
             
-        if self.iter % self.item_freq == 0:
-            self.add_accumulation(add_losses=losses_dict)
+        self.add_accumulation(add_losses=losses_dict)
 
         return total_loss
 
