@@ -9,8 +9,9 @@ Let's be in touch! Join to our [Discord server](https://discord.gg/wm2dbNYAQE)!
 1. Classification
 2. Autoencoding
 
-### Feature
-1. Losses: pixel, tv, class
+### Features
+1. Losses: pixel, tv, classification
+2. Criterions: l1, l2 (mse), elastic
 2. cpu and gpu
 3. yaml config files
 4. awesome logger (watch logger example below)
