@@ -2,4 +2,8 @@ python train.py -option ./options/train/vgg_ae_no_norm.yml
 python train.py -option ./options/train/vgg_ae_bn.yml
 python train.py -option ./options/train/vgg_ae_in.yml
 python train.py -option ./options/train/vgg_ae_ln.yml 
-python train.py -option ./options/train/vgg_ae_gn.yml 
+python train.py -option ./options/train/vgg_ae_gn.yml
+python train.py -option ./options/train/vgg_ae2_ln.yml 
+python train.py -option ./options/train/vgg_ae2_gn.yml
+python train.py -option ./options/train/vgg_ae2_better_de_ln.yml 
+python train.py -option ./options/train/vgg_ae2_better_de_gn.yml 

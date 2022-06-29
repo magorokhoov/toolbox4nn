@@ -19,33 +19,6 @@ class NoneLayer(nn.Module):
     def forward(self, x):
         return x
 
-
-class UpBlock(nn.Module):
-    def __init__(self, in_nc, out_nc, up_type: str, factor=2, kernel_size=3) -> None:
-        super(UpBlock, self).__init__()
-
-        block = []
-        padding = (kernel_size-1)//2
-        if up_type == 'upscale':
-            block += [nn.UpsamplingBilinear2d(scale_factor=factor)]
-            block += [nn.Conv2d(in_nc, out_nc,
-                                kernel_size=kernel_size, padding=padding)]
-        elif up_type == 'shuffle':
-            block += [nn.PixelShuffle(factor)]
-            block += [nn.Conv2d(in_nc, out_nc,
-                                kernel_size=kernel_size, padding=padding)]
-        elif up_type == 'transpose':
-            block += [nn.ConvTranspose2d(in_nc, out_nc,
-                                         kernel_size=kernel_size, padding=padding)]
-        else:
-            raise NotImplementedError(f'up_type {up_type} is not implemented')
-
-        self.block = nn.Sequential(*block)
-
-    def forward(self, x: torch.Tensor):
-        return self.block(x)
-
-
 class NormLayer(nn.Module):
     def __init__(self, channels: int, norm_type: str, affine: bool = True, groups: int = 1) -> None:
         super(NormLayer, self).__init__()
@@ -120,15 +93,42 @@ class ActivationLayer(nn.Module):
         return self.act_layer(x)
 
 
+class UpBlock(nn.Module):
+    def __init__(self, in_nc, out_nc, up_type: str, factor=2, kernel_size=3, act_type:str='gelu') -> None:
+        super(UpBlock, self).__init__()
+
+        block = []
+        padding = (kernel_size-1)//2
+        if up_type == 'upscale':
+            block += [nn.UpsamplingBilinear2d(scale_factor=factor)]
+            block += [nn.Conv2d(in_nc, out_nc,
+                                kernel_size=kernel_size, padding=padding)]
+        elif up_type == 'shuffle':
+            block += [nn.PixelShuffle(factor)]
+            block += [nn.Conv2d(in_nc, out_nc,
+                                kernel_size=kernel_size, padding=padding)]
+        elif up_type == 'transpose':
+            block += [nn.ConvTranspose2d(in_nc, out_nc,
+                                         kernel_size=kernel_size, padding=padding)]
+        else:
+            raise NotImplementedError(f'up_type {up_type} is not implemented')
+
+        block += [ActivationLayer(act_type=act_type)]
+        self.block = nn.Sequential(*block)
+
+    def forward(self, x: torch.Tensor):
+        return self.block(x)
+
+
 class BlockCNA(nn.Module):
     def __init__(self,
                 in_nc, out_nc, kernel_size, stride=1,
-                pad_type='none', pad=0,
+                pad_type='none',
                 act_type='relu',
                 norm_type='none', affine=True, norm_groups=1) -> None:
         super(BlockCNA, self).__init__()
 
-        self.pad = PaddingLayer(pad_type=pad_type, pad=pad)
+        self.pad = PaddingLayer(pad_type=pad_type, pad=(kernel_size-1)//2)
         self.conv = nn.Conv2d(in_nc, out_nc, kernel_size=kernel_size, stride=stride, padding=0)
         self.norm = NormLayer(channels=out_nc, norm_type=norm_type, affine=affine, groups=norm_groups)
         self.act = ActivationLayer(act_type=act_type, inplace=True)
@@ -146,3 +146,137 @@ class BlockCNA(nn.Module):
         out = self.conv(out)
 
         return out
+
+
+class ResDown(nn.Module):
+    def __init__(self,
+            in_nc, out_nc, kernel_size, stride=1,
+            pad_type='none',
+            act_type='relu',
+            norm_type='none', affine=True, norm_groups=1) -> None:
+        super(ResDown, self).__init__()
+
+        self.residual = BlockCNA(
+                in_nc, out_nc, kernel_size, stride=stride,
+                pad_type=pad_type,
+                norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                act_type=act_type)
+
+        self.conv1x1 = nn.Conv2d(in_nc, out_nc, kernel_size=1, stride=1)
+        self.act = ActivationLayer(act_type=act_type)
+        self.avgpool = nn.AvgPool2d(2)
+
+    def forward(self, x):
+
+        return self.act(self.residual(x) + self.avgpool(self.conv1x1(x)))
+
+class ResCNA(nn.Module):
+    def __init__(self,
+            mid_nc, kernel_size,
+            num_multiple: int=1,
+            pad_type='none',
+            act_type='relu',
+            norm_type='none', affine=True, norm_groups=1) -> None:
+        super(ResCNA, self).__init__()
+        # res types = 'add', 'cat', 'catadd'
+        residual = []
+
+        for _ in range(num_multiple-1):
+            residual += [BlockCNA(
+                in_nc=mid_nc, out_nc=mid_nc, kernel_size=kernel_size, stride=1,
+                pad_type=pad_type,
+                norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                act_type=act_type)]
+
+        residual += [BlockCNA(
+                in_nc=mid_nc, out_nc=mid_nc, kernel_size=kernel_size, stride=1,
+                pad_type=pad_type,
+                norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                act_type='none')]
+        self.residual = nn.Sequential(*residual)
+
+        self.act = ActivationLayer(act_type=act_type)
+
+    def forward(self, x):
+
+        return self.act(x + self.residual(x))
+
+
+class ResBottleneck(nn.Module):
+    def __init__(self,
+        mid_nc, kernel_size,
+        num_multiple: int=1,
+        pad_type='none',
+        act_type='relu',
+        norm_type='none', affine=True, norm_groups=1) -> None:
+
+        super(ResBottleneck, self).__init__()
+
+        residual = []
+        
+        for _ in range(num_multiple-1):
+            residual += [BlockCNA(
+                in_nc=mid_nc, out_nc=mid_nc, kernel_size=1,
+                norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                act_type=act_type
+            )]
+
+            residual += [BlockCNA(
+                in_nc=mid_nc, out_nc=mid_nc, kernel_size=kernel_size,
+                norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                pad_type=pad_type,
+                act_type=act_type
+            )]
+
+        residual += [BlockCNA(
+            in_nc=mid_nc, out_nc=mid_nc, kernel_size=1,
+            norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+            act_type='none'
+        )]
+
+        self.residual = nn.Sequential(*residual)
+
+        self.act = ActivationLayer(act_type=act_type)
+
+    def forward(self, x):
+
+        return self.act(x + self.residual(x))
+
+
+class ResTruck(nn.Module):
+    def __init__(self,
+            mid_nc, kernel_size,
+            num_multiple: int=1, num_blocks: int=1,
+            pad_type='none',
+            act_type='relu',
+            norm_type='none', affine=True, norm_groups=1,
+            residual_type='classic') -> None:
+        super(ResTruck, self).__init__()
+        # res types = 'add', 'cat', 'catadd'
+        blocks = []
+
+        if residual_type == 'classic':
+            for _ in range(num_blocks):
+                blocks += [ResCNA(
+                    mid_nc, kernel_size, num_multiple=num_multiple,
+                    pad_type=pad_type,
+                    norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                    act_type=act_type
+                )]
+                
+            
+
+        elif residual_type == 'bottleneck':
+            for _ in range(num_blocks):
+                blocks += [ResBottleneck(
+                    mid_nc, kernel_size, num_multiple=num_multiple,
+                    pad_type=pad_type,
+                    norm_type=norm_type, affine=affine, norm_groups=norm_groups,
+                    act_type=act_type
+                )]
+
+        self.blocks = nn.Sequential(*blocks)
+
+    def forward(self, x):
+
+        return self.blocks(x)

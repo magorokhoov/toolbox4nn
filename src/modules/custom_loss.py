@@ -55,23 +55,23 @@ def get_criterion(option_criterion: dict):
     return criterion_func
 
 class ElasticLoss(nn.Module):
-    def __init__(self, alpha=0.2, reduction='mean'):
+    def __init__(self, alpha=0.8, reduction='mean'):
         super(ElasticLoss, self).__init__()
 
         if alpha < 0.0 or 1.0 < alpha:
             raise Exception("alpha must be from 0.0 to 1.0")
 
-        self.alpha1 = torch.FloatTensor(alpha)
-        self.alpha2 = torch.FloatTensor(1 - alpha)
+        self.alpha1 = alpha
+        self.alpha2 = 1 - alpha
         self.reduction = reduction
 
     def forward(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         l2 = F.mse_loss(x.squeeze(), y.squeeze(),
-                        reduction=self.reduction).mul(self.alpha[0])
+                        reduction=self.reduction)
         l1 = F.l1_loss(x.squeeze(), y.squeeze(),
-                       reduction=self.reduction).mul(self.alpha[1])
+                       reduction=self.reduction)
 
-        loss = l1 + l2
+        loss = self.alpha1*l1 + self.alpha2*l2
         return loss
 
 class TVLoss(nn.Module):

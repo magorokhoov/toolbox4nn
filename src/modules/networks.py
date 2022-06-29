@@ -28,7 +28,9 @@ def get_network(option_network: dict):
     elif arch == 'VggAEUnet'.lower():
         from modules.archs.vggs import VggAEUnet as network # 
     elif arch == 'VggAE'.lower():
-        from modules.archs.vggs import VggAE as network # 
+        from modules.archs.vggs import VggAE as network #
+    elif arch == 'ResnetAE_v2'.lower():
+        from modules.archs.resnets import ResnetAE_v2 as network # 
     else:
         raise NotImplementedError(
             f'Neural Network [{arch}] is not recognized. networks.py doesn\'t know {[arch]}')

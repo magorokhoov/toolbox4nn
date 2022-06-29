@@ -16,6 +16,7 @@ import torch.nn.functional as F
 from torch.cuda.amp import autocast, GradScaler
 
 import data
+import modules.metrics as metrics
 import modules.losser as losser
 import modules.networks as networks
 import modules.optimizers as optimizers
@@ -134,7 +135,7 @@ class BaseModel:
         # train_step()
         # optimizers zero_grad, step, losses backward, etc
 
-        self.logger.warn(
+        self.logger.error(
             'Please do not use base_model. Use concrete model instand')
         raise NotImplementedError(
             'Please do not use base_model. Use concrete model instand')

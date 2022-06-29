@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import data
+from modules import metrics
 import modules.networks as networks
 import modules.optimizers as optimizers
 import modules.losser as losser
@@ -34,28 +35,39 @@ class AutoEncoder(base_model.BaseModel):
 
         utils.mkdir(self.result_img_dir)
 
+        self.total_psnr = 0.0 # костыль/crutch
+
     def train_step(self, iter: int=0) -> None:
         # self.sample
-        img_A, img_B = self.sample['img_A'], self.sample['img_B']
+        self.img_A, self.img_B = self.sample['img_A'], self.sample['img_B']
 
         if len(self.gpu_ids) != 0:
-            img_A = img_A.cuda()
-            img_B = img_B.cuda()
+            self.img_A = self.img_A.cuda()
+            self.img_B = self.img_B.cuda()
 
             
         with self.cast(enabled=self.use_amp):
-            img_pred = self.networks['ae'](img_A)
+            self.img_pred = self.networks['ae'](self.img_A)
             for losser_name in self.lossers:
-                self.losses[losser_name] = self.lossers[losser_name](img_pred, img_B)
+                self.losses[losser_name] = self.lossers[losser_name](self.img_pred, self.img_B)
 
+        self.total_psnr += metrics.psnr_torch(self.img_pred, self.img_B).item() # костыль/crutch
         if iter % self.display_freq == 0:
-            self.display_images(iter=iter, images_list=[img_A.detach().cpu(), img_B.detach().cpu(), img_pred.detach().cpu()])
+            self.display_images(iter=iter, images_list=[self.img_A.detach().cpu(), self.img_B.detach().cpu(), self.img_pred.detach().cpu()])
 
         self.optimizers_zero_grad()
         self.losses_backward()
         self.optimizers_step()
 
         # schedulers_step()
+
+    def logger_info_networks(self) -> str:
+        # костыль/crutch
+        info_str = super().logger_info_networks()
+        self.total_psnr /= self.print_freq # костыль/crutch
+        info_str += f'psnr: {self.total_psnr:.2f}'
+        self.total_psnr = 0.0 # костыль/crutch
+        return info_str
 
     def display_images(self, iter: int, images_list: list):
         result_img = utils.tensor2npimg(images_list[0][0])

@@ -1,0 +1,80 @@
+name: resnet_ae_adamw_0.004_26jun2022
+task: autoencoder
+gpu_ids: [0]
+use_amp: False
+dataset:
+  name: img
+  path_dir: /home/manavendra/homeNN/Datasets/mounted/FFHQ
+  batch_size: 8
+  shuffle: True
+  num_workers: 4
+
+networks:
+  ae:
+    arch: ResnetAE
+    in_nc: 3
+    mid_nc: 32
+    out_nc: 3
+    num_blocks: 3
+    num_rescna_blocks: 3
+
+    norm_type: group
+    pad_type: zero
+    act_type: gelu
+    up_type: shuffle
+    norm_groups: 4
+
+    losser_type: image
+    loss:
+      pix_l1:
+        type: pixel
+        criterion: {criterion_type: l1}
+        weight: 1.0
+      #tv_2:
+      #  type: tv
+      #  criterion: {gamma: 1.2}
+      #  weight: 0.001
+
+    optimizer:
+      name: adamw
+      weight_decay: 0.004
+      beta1: 0.9
+      beta2: 0.999
+      lr: 1e-3
+
+    scheduler:
+      # TODO: restart
+      # TODO warm-up
+      #scheme: linear
+      #end_factor: 0.2
+
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      gamma: 0.5
+
+
+weights: 
+  # ae: '../experiments/ae_faces_22jun2022/models/ae.pth'
+
+experiments:
+  root: '../experiments/'
+  checkpoint_freq: 2000
+  display_freq: 100
+
+train:
+  n_iters: 10000
+  
+#loss:
+#  func_type: CrossEntropyLoss
+#  weight: 1.0
+  #reduction: mean
+  #pixel_criterion: l2
+  #pixel_weight: 100.0
+
+logger:
+  # loss_item_freq: 5 # Preferably a multiple of print_freq. loss.item() increase GPU-CPU sync. So let's do item() more rarer
+  print_freq: 100
+  save_log_file: True
+  #path_log_file: '../logs'
+   

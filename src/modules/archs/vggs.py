@@ -35,14 +35,17 @@ class VggAE(nn.Module):
         self.block4_2 = blocks.BlockCNA(8*mid_nc, 8*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 16x, 16
         self.block4_3 = blocks.BlockCNA(8*mid_nc, 8*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 16x, 16
         
-        self.up3 = blocks.UpBlock(2*mid_nc, 8*mid_nc, up_type=up_type) # 8x
+        self.up3 = blocks.UpBlock(2*mid_nc, 8*mid_nc, kernel_size=5, up_type=up_type, act_type=act_type) # 8x
         self.blockup3_1 = blocks.BlockCNA(8*mid_nc, 8*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 8x, 32
-        self.up2 = blocks.UpBlock(2*mid_nc, 4*mid_nc, up_type=up_type) # 4x
+        self.blockup3_2 = blocks.BlockCNA(8*mid_nc, 8*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 8x, 32
+        self.up2 = blocks.UpBlock(2*mid_nc, 4*mid_nc, kernel_size=5, up_type=up_type, act_type=act_type) # 4x
         self.blockup2_1 = blocks.BlockCNA(4*mid_nc, 4*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 4x, 64
-        self.up1 = blocks.UpBlock(1*mid_nc, 2*mid_nc, up_type=up_type) # 2xck
+        self.blockup2_2 = blocks.BlockCNA(4*mid_nc, 4*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 4x, 64
+        self.up1 = blocks.UpBlock(1*mid_nc, 2*mid_nc, kernel_size=5, up_type=up_type, act_type=act_type) # 2xck
         self.blockup1_1 = blocks.BlockCNA(2*mid_nc, 2*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 2x, 128
-        self.up0 = blocks.UpBlock(mid_nc//2, mid_nc//2, up_type=up_type) # 1x
-        self.blockup0_1 = blocks.BlockCNA(mid_nc//2, mid_nc//2, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 1x, 256
+        self.blockup1_2 = blocks.BlockCNA(2*mid_nc, 2*mid_nc, kernel_size=3, stride=1, pad_type=pad_type, pad=1, act_type=act_type, norm_type=norm_type, norm_groups=norm_groups)  # 2x, 128
+        self.up0 = blocks.UpBlock(mid_nc//2, mid_nc//2, kernel_size=5, up_type=up_type, act_type=act_type) # 1x
+        self.blockup0_1 = blocks.BlockCNA(mid_nc//2, mid_nc//2, kernel_size=5, stride=1, pad_type=pad_type, pad=2, act_type=act_type, norm_type='none', norm_groups=norm_groups)  # 1x, 256
  
         self.lastconv = nn.Conv2d(mid_nc//2, out_nc, kernel_size=7, padding=0)
 
@@ -61,18 +64,18 @@ class VggAE(nn.Module):
 
         out = self.up3(out) # 8x
         out = self.blockup3_1(out) # 8x
+        out = self.blockup3_2(out) # 8x
         out = self.up2(out) # 4x
         out = self.blockup2_1(out) # 4x
+        out = self.blockup2_2(out) # 8x
         out = self.up1(out) # 2x
         out = self.blockup1_1(out) # 2x
+        out = self.blockup1_2(out) # 8x
         out = self.up0(out) # 1x
         out = self.blockup0_1(out) # 1x
         
-
         out = self.pad3(out)
         out = self.lastconv(out)
-
-        # self.conv2_1_1x1(mid1)
 
         return out
 
