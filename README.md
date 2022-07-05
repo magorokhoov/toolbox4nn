@@ -43,73 +43,96 @@ Let's be in touch! Join to our [Discord server](https://discord.gg/wm2dbNYAQE)!
 ```
 ## YAML Config example
 ```yaml
-name: ae_21jun2022
-task: autoencoder
-gpu_ids: [0]
+name: class_5jul2022
+task: classification
+device: cuda # cpu cuda
+use_amp: False
+# gpu_ids: [0] will be released in next versions. Use device instead
+
 dataset:
-  name: img
-  path_dir: '../Datasets/cats_dogs/training_set/cats/'
-  #path_dir2:  '../Datasets/cats_dogs/training_set/dogs/'
-  #path_test1: '../Datasets/cats_dogs/test_set/cats/'
-  #path_test2: '../Datasets/cats_dogs/test_set/dogs/'
+  name: folderfolders_classae
+  path_dirs: /home/manavendra/homeNN/Datasets/mounted/Places205/images
+  # /home/manavendra/homeNN/Datasets/mounted/FFHQ
   batch_size: 16
   shuffle: True
   num_workers: 4
 
 networks:
-  ae:
-    arch: SimpleAEUnet
+  en:
+    arch: classae_en
     in_nc: 3
     mid_nc: 32
-    out_nc: 3
+    inner_nc: 256 # 64x8
 
-    losser_type: image
-    loss:
-      pixel:
-        criterion: {criterion_type: l1}
-        weight: 1.0
-      tv:
-        criterion: {gamma: 2}
-        weight: 0.01
-
+    act_type: gelu
+    norm_type: group
+    norm_groups: 4
+    
     optimizer:
-      name: adam
+      name: adamw
+      weight_decay: 0.001
       beta1: 0.9
-      beta2: 0.999
+      beta2: 0.99
       lr: 1e-3
 
     scheduler:
-      #scheme: linear
-      #end_factor: 0.2
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      gamma: 0.5
+      
+  class:
+    arch: classae_class
+    inner_nc: 256
+    midclass_nc: 1024
+    class_num: 205
 
+    act_type: gelu
+    norm_type: group
+    norm_groups: 4
+    dropout_rate: 0.5
+
+    optimizer:
+      name: adamw
+      weight_decay: 0.001
+      beta1: 0.9
+      beta2: 0.99
+      lr: 1e-3
+
+    scheduler:
       scheme: multistep
       #milestones: []
       milestones_rel: [0.2, 0.4, 0.6, 0.8] 
       gamma: 0.5
 
+lossers:
+  l_class:
+    losser_type: class
+    loss:
+      class:
+        loss_name: CEL
+        criterion: {criterion_type: CrossEntropyLoss}
+        weight: 1.0
+
+metrics: [acc]
 
 weights: 
-  # ae: '../experiments/ae_21jun2022/models/ae.pth'
+  #classae_en: 
+  #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  #  strict: False
 
 experiments:
   root: '../experiments/'
-  checkpoint_freq: 1000
-  display_freq: 50
+  saving_freq: 2000
+  display_freq: 100
 
 train:
-  n_iters: 6000
+  n_iters: 10000
   
-#loss:
-#  func_type: CrossEntropyLoss
-#  weight: 1.0
-  #reduction: mean
-  #pixel_criterion: l2
-  #pixel_weight: 100.0
-
 logger:
-  print_freq: 100
+  print_freq: 500
   save_log_file: True
-  #path_log_file: '../logs'
+   
    
 ```
 
