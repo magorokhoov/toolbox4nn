@@ -8,7 +8,7 @@ dataset:
   name: folderfolders_classae
   path_dirs: /home/manavendra/homeNN/Datasets/mounted/Places205/images
   # /home/manavendra/homeNN/Datasets/mounted/FFHQ
-  batch_size: 4
+  batch_size: 16
   shuffle: True
   num_workers: 4
 
@@ -16,8 +16,8 @@ networks:
   en:
     arch: classae_en
     in_nc: 3
-    mid_nc: 64
-    inner_nc: 512 # 64x8
+    mid_nc: 32
+    inner_nc: 256 # 64x8
 
     act_type: gelu
     norm_type: group
@@ -38,7 +38,7 @@ networks:
       
   class:
     arch: classae_class
-    inner_nc: 512
+    inner_nc: 256
     midclass_nc: 1024
     class_num: 205
 
@@ -72,7 +72,7 @@ lossers:
 metrics: [acc]
 
 weights: 
-  #ae: 
+  #classae_en: 
   #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
   #  strict: False
 
@@ -82,10 +82,9 @@ experiments:
   display_freq: 100
 
 train:
-  n_iters: 5000
+  n_iters: 10000
   
-
 logger:
-  print_freq: 200
+  print_freq: 500
   save_log_file: True
    
