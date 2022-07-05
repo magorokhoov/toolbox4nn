@@ -1,22 +1,24 @@
-name: resnet_ae_adamw_0.001_26jun2022
+name: resnet_v2_001_30jun2022
 task: autoencoder
-gpu_ids: [0]
+device: gpu
 use_amp: False
+# gpu_ids: [0] will be released in next versions. Use device instead
+
 dataset:
   name: img
   path_dir: /home/manavendra/homeNN/Datasets/mounted/FFHQ
-  batch_size: 8
+  batch_size: 1
   shuffle: True
   num_workers: 4
 
 networks:
   ae:
-    arch: ResnetAE
+    arch: ResnetAE_v2
     in_nc: 3
-    mid_nc: 32
+    mid_nc: 64
     out_nc: 3
     num_blocks: 3
-    num_rescna_blocks: 3
+    num_multiple: 2
 
     norm_type: group
     pad_type: zero
@@ -24,22 +26,11 @@ networks:
     up_type: shuffle
     norm_groups: 4
 
-    losser_type: image
-    loss:
-      pix_l1:
-        type: pixel
-        criterion: {criterion_type: l1}
-        weight: 1.0
-      #tv_2:
-      #  type: tv
-      #  criterion: {gamma: 1.2}
-      #  weight: 0.001
-
     optimizer:
       name: adamw
       weight_decay: 0.001
       beta1: 0.9
-      beta2: 0.999
+      beta2: 0.99
       lr: 1e-3
 
     scheduler:
@@ -53,28 +44,34 @@ networks:
       milestones_rel: [0.2, 0.4, 0.6, 0.8] 
       gamma: 0.5
 
+lossers:
+  l_gen:
+    losser_type: image
+    loss:
+      pixel:
+        criterion: {criterion_type: elastic, alpha: 0.8}
+        weight: 1.0
+      tv:
+        criterion: {gamma: 0.8}
+        weight: 0.001
+
+      
 
 weights: 
-  # ae: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  ae: 
+    path: '../experiments/ae_faces_22jun2022/models/ae.pth'
+    strict: False
 
 experiments:
   root: '../experiments/'
-  checkpoint_freq: 2000
+  saving_freq: 2000
   display_freq: 100
 
 train:
   n_iters: 10000
   
-#loss:
-#  func_type: CrossEntropyLoss
-#  weight: 1.0
-  #reduction: mean
-  #pixel_criterion: l2
-  #pixel_weight: 100.0
 
 logger:
-  # loss_item_freq: 5 # Preferably a multiple of print_freq. loss.item() increase GPU-CPU sync. So let's do item() more rarer
   print_freq: 100
   save_log_file: True
-  #path_log_file: '../logs'
    

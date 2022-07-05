@@ -2,6 +2,7 @@ import logging
 import os
 import re
 import random
+import time
 from datetime import datetime
 
 import cv2
@@ -38,7 +39,6 @@ def get_random_cropped(img, shape):
     rnd_x = random.randint(0, w - shape[1])
 
     return img[rnd_y:rnd_y+shape[0], rnd_x:rnd_x+shape[1]]
-
 
 
 def get_timestamp():
@@ -130,3 +130,47 @@ def time_nicer(tm:float, point_digits=2) -> str:
         tm = f'{tm:.2f}s'
 
     return tm
+
+
+class TrainTimer:
+    """
+    Return:
+    1. Delta Time between logger prints (DT)
+    2. Estimated Time of ending (ET)
+    """
+    def __init__(self, n_iters: int, print_freq:int) -> None:
+        self.n_iters = n_iters
+        self.print_freq = print_freq
+        self.time_last_print = time.time()
+
+    def get_stats(self, iter:int) -> dict:
+        # DT - delta time
+        # ET - estimated time
+        dt = time.time() - self.time_last_print
+        et = dt * (self.n_iters - iter) / self.print_freq
+
+        self.time_last_print = time.time()
+
+        return {'DT': dt, 'ET': et}
+
+    def get_stats_str(self, iter:int) -> str:
+        stats = self.get_stats(iter=iter)
+        dt, et = stats['DT'], stats['ET']
+
+        str_result = f'DT={time_nicer(dt)}, ET={time_nicer(et)}'
+
+        return str_result
+
+
+def display_images(result_img_dir:str, iter: int, tensor_images_list: list):
+        result_img = tensor2npimg(tensor_images_list[0][0])
+
+        for i in range(1, len(tensor_images_list)):
+            img = tensor2npimg(tensor_images_list[i][0])
+            result_img = np.concatenate((result_img, img), axis=1) # result image will be more wider
+
+        result_img = (255.0*result_img).clip(0,255).astype(np.uint8)
+
+        result_img_path = os.path.join(result_img_dir, f'{iter}.png')
+
+        cv2.imwrite(result_img_path, result_img)

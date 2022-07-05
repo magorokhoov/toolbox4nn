@@ -1,0 +1,91 @@
+name: stupid_test
+task: autoencoder_v2
+device: cuda # cpu cuda
+use_amp: False
+# gpu_ids: [0] will be released in next versions. Use device instead
+
+dataset:
+  name: img
+  path_dir: /home/manavendra/homeNN/Datasets/mounted/FFHQ
+  batch_size: 4
+  shuffle: True
+  num_workers: 4
+
+networks:
+  en:
+    arch: stupid_en
+    in_nc: 3
+    mid_nc: 64
+    
+    optimizer:
+      name: adamw
+      weight_decay: 0.001
+      beta1: 0.9
+      beta2: 0.99
+      lr: 1e-3
+
+    scheduler:
+      # TODO: restart
+      # TODO warm-up
+      #scheme: linear
+      #end_factor: 0.2
+
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      gamma: 0.5
+  de:
+    arch: stupid_de
+    mid_nc: 64
+    out_nc: 3
+
+    optimizer:
+      name: adamw
+      weight_decay: 0.001
+      beta1: 0.9
+      beta2: 0.99
+      lr: 1e-3
+
+    scheduler:
+      # TODO: restart
+      # TODO warm-up
+      #scheme: linear
+      #end_factor: 0.2
+
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8] 
+      gamma: 0.5
+
+lossers:
+  l_gen:
+    losser_type: image
+    loss:
+      pixel:
+        #loss_name: pix_l1
+        criterion: {criterion_type: elastic, alpha: 0.8}
+        weight: 1.0
+      #tv:
+      #  criterion: {gamma: 0.8}
+      #  weight: 0.001
+
+metrics: [psnr]
+
+weights: 
+  #ae: 
+  #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  #  strict: False
+
+experiments:
+  root: '../experiments/'
+  saving_freq: 2000
+  display_freq: 100
+
+train:
+  n_iters: 5000
+  
+
+logger:
+  print_freq: 200
+  save_log_file: True
+   

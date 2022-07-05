@@ -16,7 +16,11 @@ def create_dataset(option_ds: dict) -> Dataset:
     elif name == 'a2b':
         from data.datasets.datasetA2B import DatasetA2B as D
     elif name == 'img':
-        from data.datasets.datasetImg import DatasetImg as D
+        from data.datasets.datasetImg import DatasetImg as D 
+    elif name == 'folderfolders':
+        from data.datasets.datasetFFs import DatasetFFs as D
+    elif name == 'folderfolders_classae':
+        from data.datasets.datasetFFs_classae import DatasetFFs as D 
     else:
         raise NotImplementedError(f'Dataset [{name:s}] is not recognized.')
 
@@ -29,19 +33,17 @@ def create_dataset(option_ds: dict) -> Dataset:
 
 def create_dataloader(
         dataset: Dataset,
-        option_ds: dict,
-        gpu_ids=None) -> DataLoader:
+        option_ds: dict) -> DataLoader:
     """
     Create Dataloader.
     :param dataset: Dataset to use
     :param option_ds: Dataset configuration from opt file
     """
-    if gpu_ids is None:
-        gpu_ids = []
+
     dataloader_params = {
         "batch_size": option_ds['batch_size'],
         "shuffle": option_ds['shuffle'],
-        "num_workers": option_ds['num_workers'] * len(gpu_ids),
+        "num_workers": option_ds['num_workers'],
         "drop_last": True
     }
 
