@@ -35,7 +35,7 @@ Let's be in touch! Join to our [Discord server](https://discord.gg/wm2dbNYAQE)!
 ├── experiments -- here will be your result of training/tests (logs, model weights, val_images, etc) 
 └── src -- main code
     ├── data -- datasets, dataloaders and data proccessing (tranforms and augmentation)
-    ├── modules -- losses, models, optimizers, schedulers, metrics (not implemented now), etc
+    ├── modules -- losses, models, optimizers, schedulers, metrics, etc
     ├── options -- YAML confings for flexible, powerful and easy configuration
     ├── sh -- sh files start if you use linux like me
     ├── train.py -- main file
