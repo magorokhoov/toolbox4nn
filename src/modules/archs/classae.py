@@ -145,15 +145,13 @@ class Class_001(nn.Module):
 
         avg_pool = nn.AdaptiveAvgPool2d((1,1))
         flat = nn.Flatten()
-        linear0 = nn.Linear(midclass_nc, midclass_nc)
-        linear1 = nn.Linear(midclass_nc, int((midclass_nc*class_num)**0.5))
-        linear2 = nn.Linear(int((midclass_nc*class_num)**0.5), class_num)
+        linear0 = nn.Linear(midclass_nc, (midclass_nc + class_num)//2)
+        linear1 = nn.Linear((midclass_nc + class_num)//2, class_num)
 
         self.model = nn.Sequential(
-            after_inner, avg_pool, flat,
+            after_inner, avg_pool, flat, drop,
             linear0, drop, act,
-            linear1, drop, act,
-            linear2
+            linear1
         )
 
     def forward(self, x, last_act_type='none'):

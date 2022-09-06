@@ -61,33 +61,35 @@ class Classificator(base_model.BaseModel):
             for epoch in range(1, n_epochs + 1):
                 for self.sample in self.dataloader:
                     img = self.sample['img'].to(self.device)
+                    label = self.sample['label'].to(self.device)
 
                     with self.cast(enabled=self.use_amp):
                         encoded_features = self.networks['en'](img)
-                        img_pred = self.networks['class'](encoded_features)
+                        pred = self.networks['class'](encoded_features)
+                        loss_class = self.lossers['l_class'](pred, label)
 
                     last_losses_dict = self.lossers['l_class'].get_last_losses()
                     self.acc_stats['l_class'].add_accumulation(last_losses_dict)
                     
                     # Loss Generator Backward
-                    self.optimizers['de'].zero_grad()
+                    self.optimizers['en'].zero_grad()
                     self.optimizers['class'].zero_grad()
                     
-                    img_pred.backward()
+                    loss_class.backward()
                     
-                    self.amp_scaler.step(self.optimizers['de'])
+                    self.amp_scaler.step(self.optimizers['en'])
                     self.amp_scaler.update()
                     self.amp_scaler.step(self.optimizers['class'])
                     self.amp_scaler.update()
 
-                    self.schedulers['de'].step()
+                    self.schedulers['en'].step()
                     self.schedulers['class'].step()
 
                     # Metrics
                     metrics_dict = metrics.get_metrics_dict(
                         metrics=self.metrics_list,
-                        img1=img_B.detach().cpu(),
-                        img2=img_pred.detach().cpu()
+                        pred=pred.detach().cpu(),
+                        target=label.detach().cpu()
                         )
                     self.acc_stats['metrics'].add_accumulation(metrics_dict)
 

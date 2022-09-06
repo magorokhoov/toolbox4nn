@@ -19,6 +19,8 @@ def create_dataset(option_ds: dict) -> Dataset:
         from data.datasets.datasetImg import DatasetImg as D 
     elif name == 'folderfolders':
         from data.datasets.datasetFFs import DatasetFFs as D
+    elif name == 'folderfolders_imbalanced':
+        from data.datasets.datasetFFs_imbalanced import DatasetFFs as D
     elif name == 'folderfolders_classae':
         from data.datasets.datasetFFs_classae import DatasetFFs as D 
     else:

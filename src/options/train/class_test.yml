@@ -1,14 +1,14 @@
-name: class_5jul2022
+name: class_2_5jul2022
 task: classification
 device: cuda # cpu cuda
 use_amp: False
 # gpu_ids: [0] will be released in next versions. Use device instead
 
 dataset:
-  name: folderfolders_classae
+  name: folderfolders
   path_dirs: /home/manavendra/homeNN/Datasets/mounted/Places205/images
   # /home/manavendra/homeNN/Datasets/mounted/FFHQ
-  batch_size: 16
+  batch_size: 32
   shuffle: True
   num_workers: 4
 
@@ -17,7 +17,7 @@ networks:
     arch: classae_en
     in_nc: 3
     mid_nc: 32
-    inner_nc: 256 # 64x8
+    inner_nc: 256 # 32x8
 
     act_type: gelu
     norm_type: group
@@ -28,7 +28,7 @@ networks:
       weight_decay: 0.001
       beta1: 0.9
       beta2: 0.99
-      lr: 1e-3
+      lr: 2e-4
 
     scheduler:
       scheme: multistep
@@ -72,17 +72,20 @@ lossers:
 metrics: [acc]
 
 weights: 
-  #classae_en: 
-  #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
-  #  strict: False
+  en: 
+    path: '../experiments/class_5jul2022/models/en.pth'
+    strict: False
+  class: 
+    path: '../experiments/class_5jul2022/models/class.pth'
+    strict: False
 
 experiments:
   root: '../experiments/'
-  saving_freq: 2000
+  saving_freq: 10000
   display_freq: 100
 
 train:
-  n_iters: 10000
+  n_iters: 5000
   
 logger:
   print_freq: 500

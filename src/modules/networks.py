@@ -40,7 +40,17 @@ def get_network(option_network: dict, device='cpu'):
     elif arch == 'classae_de'.lower():
         from modules.archs.classae import Decoder_001 as network # 
     elif arch == 'classae_class'.lower():
-        from modules.archs.classae import Class_001 as network # 
+        from modules.archs.classae import Class_001 as network #
+
+    # efficientnet net
+    elif arch == 'efficientnet_b0_features'.lower():
+        from torchvision.models import efficientnet_b0
+        network = efficientnet_b0(pretrained=True)
+        return network.features.to(device=device)
+    elif arch == 'efficientnet_b1_features'.lower():
+        from torchvision.models import efficientnet_b1
+        network = efficientnet_b1(pretrained=True)
+        return network.features.to(device=device)
     else:
         raise NotImplementedError(
             f'Neural Network [{arch}] is not recognized. networks.py doesn\'t know {[arch]}')

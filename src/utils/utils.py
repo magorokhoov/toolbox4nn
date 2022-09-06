@@ -35,10 +35,24 @@ def get_scaled(img, shape):
 
 def get_random_cropped(img, shape):
     h, w, _ = img.shape
-    rnd_y = random.randint(0, h - shape[0])
-    rnd_x = random.randint(0, w - shape[1])
 
-    return img[rnd_y:rnd_y+shape[0], rnd_x:rnd_x+shape[1]]
+    if h - shape[0] < 2:
+        rnd_y = 0
+    else:
+        rnd_y = random.randint(0, h - shape[0])
+
+    if h - shape[0] < 2:
+        rnd_x = 0
+    else:
+        rnd_x = random.randint(0, w - shape[1])
+
+    if rnd_y != 0:
+        img = img[rnd_y:rnd_y+shape[0]]
+
+    if rnd_x != 0:
+        img = img[:, rnd_x:rnd_x+shape[1]]
+
+    return img
 
 
 def get_timestamp():

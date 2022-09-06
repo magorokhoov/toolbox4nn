@@ -90,15 +90,20 @@ class BaseModel:
             
             if option_weights is not None:
                 option_network_weight = option_weights.get(network_name)
+                if option_network_weight is not None:
 
-                strict = option_network_weight.get('strict', False)
-                network_path = option_network_weight.get('path', False)
+                    strict = option_network_weight.get('strict', False)
+                    network_path = option_network_weight.get('path', None)
 
-                if network_path is not None:
-                    self.networks[network_name].load_state_dict(
-                        torch.load(network_path),
-                        strict=strict)
-                    self.logger.info(f'{network_name} had been loaded from {network_path} (strict: {strict})')
+                    if network_path is not None:
+                        self.networks[network_name].load_state_dict(
+                            torch.load(network_path),
+                            strict=strict)
+                        self.logger.info(f'[{network_name}] has been loaded from {network_path} (strict: {strict})')
+                else:
+                    self.logger.info(f'[{network_name}] will be trained from scratch')
+            else:
+                self.logger.info(f'All models will be trained from scratch')
             
             # Optimizator
             option_optimizer = option_network.get('optimizer')
@@ -131,10 +136,6 @@ class BaseModel:
         self.acc_stats['metrics'] = stats.AccumulationStats()
 
         self.losses = nn.ModuleDict()
-
-        # Load Model
-        if option_weights is not None:
-            self.load_models(option_weights)
 
         # Display images
         self.display_freq = option_experiments.get('display_freq', None)

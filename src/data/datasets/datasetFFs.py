@@ -17,6 +17,7 @@ class DatasetFFs(torch.utils.data.Dataset):
         self.path_dirs = option_ds.get('path_dirs')
         #print(self.path_dirs)
         self.listdirs = sorted(os.listdir(self.path_dirs))
+        print(self.listdirs)
         self.list_images = []
         self.boundaries = [0]
         self.num_classes = len(self.listdirs)
@@ -43,14 +44,24 @@ class DatasetFFs(torch.utils.data.Dataset):
 
         img = cv2.imread(img_path, cv2.IMREAD_COLOR)
 
-        img = utils.get_random_cropped(img, (256,256))
+        #img = utils.get_random_cropped(img, (512,512))
+        try: 
+            img = cv2.resize(img, (320,320), interpolation=cv2.INTER_LINEAR)
+        except:
+            print(f'error with {img_path}')
+            img = np.random.randn((320,320,3), dtype=np.uint8) 
         img = utils.get_norm_img(img)
-        img_B = img.copy()
 
 
         h, w, c = img.shape
+        if random.random() <= 0.5:
+            img = cv2.flip(img, 1)
+
+        if random.random() <= 0.3:
+            img = cv2.GaussianBlur(img,(5,5),cv2.BORDER_DEFAULT)
+
         if random.random() <= 0.7:
-            img += np.random.normal(0, 0.035, size=(h,w,c)).clip(-0.1, 0.1)
+            img += np.random.normal(0, 0.03, size=(h,w,c)).clip(-0.05, 0.05)
         img = img.clip(0,1.0)
 
         label = np.zeros(self.num_classes, dtype=np.float32)
