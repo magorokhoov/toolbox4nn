@@ -6,6 +6,50 @@ import os
 import numpy as np
 
 
+class Metricer:
+    def __init__(self, option_metrics:dict) -> None:
+        self.metric_funcs = []
+        #print(option_metrics)
+        for metric_name in option_metrics:
+            metric_type = option_metrics[metric_name]['metric_type']
+            parameters = option_metrics[metric_name]
+            func = get_metric_func(metric_name, metric_type, parameters)
+            self.metric_funcs += [func]
+
+    def calc_dict_metrics(self, tensor1, tensor2=None):
+
+        result_dict = {}
+
+        for func in self.metric_funcs:
+            metric_name = func['metric_name']
+            metric_type = func['metric_type']
+
+            if metric_type == 'psnr':
+                result_dict[metric_name] = func['func'](tensor1, tensor2)
+            else:
+                raise NotImplementedError(
+                    f'metric_type [{metric_type}] is not implemented in calc_dict_metrics')
+
+        return result_dict
+
+
+def get_metric_func(metric_name: str, metric_type: str, parameters) -> dict:
+    if metric_type == 'psnr':
+        metric_func = psnr_torch
+
+    else:
+        raise NotImplementedError(f'metric_type {metric_type} is not implemented')
+
+    if metric_name is None:
+        metric_name = metric_type
+
+    return {'metric_name': metric_name,
+            'metric_type': metric_type,
+            'parameters': parameters, 
+            'func': metric_func
+            }
+
+
 def psnr_np(img1, img2, pixel_max:int=1.0, clip=True, shave=0, single=True):
     if clip:
         diff = img1.clip(0.0, pixel_max) - img2.clip(0.0, pixel_max)
@@ -57,7 +101,7 @@ def get_accuracy(tensor_pred:torch.Tensor, tensor_target:torch.Tensor):
 
 
 def get_metrics_dict(
-    metrics:list,
+    metrics:dict,
     img1:torch.Tensor=None,
     img2:torch.Tensor=None,
     pred:torch.Tensor=None,
@@ -65,13 +109,15 @@ def get_metrics_dict(
 
     metrics_dict = {}
     #print(metrics)
-    for metric in metrics:
-        
-        if metric == 'psnr':
+    print(metrics)
+    for metric_name in metrics:
+        metric_type = metrics[metric_name]
+        if metric_type == 'psnr':
             metrics_dict['psnr'] = psnr_torch(img1=img1, img2=img2)
-        elif metric in ('acc', 'accuracy'):
+        elif metric_type in ('acc', 'accuracy'):
             metrics_dict['acc'] = get_accuracy(tensor_pred=pred, tensor_target=target)
         else:
-            raise NotImplementedError(f'Metric {metric} is not implemented')
+            raise NotImplementedError(
+                f'Metric "{metric_name}" with type [{metric_type}] is not implemented')
 
     return metrics_dict

@@ -5,6 +5,7 @@ import math
 import os
 import time
 import logging
+import shutil
 
 import cv2
 import yaml
@@ -30,24 +31,34 @@ class BaseModel:
         self.name = option.get('name')
 
         # Getting options from option:dict
-        option_ds = option.get('dataset')
+        option_datasets = option.get('datasets')
         option_networks = option.get('networks')
-        option_logger = option.get('logger')
         option_weights = option.get('weights')
         option_experiments = option.get('experiments')
-        option_train = option.get('train')
         option_lossers = option.get('lossers')
-        self.metrics_list = option.get('metrics')
-
+        option_metrics = option.get('metrics')
+        
         # Experiments
         self.saving_freq = option_experiments.get('saving_freq')
         self.experiments_root = option_experiments.get('root')
         utils.mkdir(self.experiments_root)
         self.experiment_dir_path = os.path.join(
             self.experiments_root, self.name)
+        
+        if os.path.exists(self.experiment_dir_path): # backup exist exp roo
+            if self.experiment_dir_path[-1] == '/':
+                existed = self.experiment_dir_path[:-1]
+            else:
+                existed = self.experiment_dir_path
+            dst = existed + '_' + utils.get_timestamp()
+            shutil.move(existed, dst)
+
         utils.mkdir(self.experiment_dir_path)
 
-        # Logger
+        ### Number of iterations
+        self.n_iters = option_experiments.get('n_iters')
+
+        ### logger
         self.logger = utils.get_root_logger(
             'base',
             root=self.experiment_dir_path,
@@ -56,12 +67,9 @@ class BaseModel:
             tofile=True)
         self.logger.info(utils.dict2str(option))
         self.logger.info('Training initialization...')
-        self.print_freq = option_logger.get('print_freq')
+        self.print_freq = option_experiments.get('log_print_freq')
 
-        # Train
-        self.option_train = option_train
-        self.n_iters = option_train.get('n_iters')
-        self.metrics = option_train.get('metrics')
+        # Device
         device = option.get('device')
         self.device = device
 
@@ -74,12 +82,15 @@ class BaseModel:
         else:
             self.logger.info('AMP disabled')
 
-        # Dataset
-        self.batch_size = option_ds.get('batch_size')
-        dataset = data.create_dataset(option_ds)
-        self.dataloader = data.create_dataloader(dataset, option_ds)
+        # Datasets
+        self.dataloaders = {}
+        self.batch_sizes = {}
+        for dataset_name in option_datasets:
+            option_ds = option_datasets[dataset_name]
+            self.batch_sizes[dataset_name] = option_ds['batch_size']
+            self.dataloaders[dataset_name] = data.create_dataloader(data.create_dataset(option_ds), option_ds)
 
-        # Networks, Optimizers and Schedulers
+        # Networks, Weights loading, Optimizers and Schedulers
         self.networks = nn.ModuleDict()
         self.optimizers = {}
         self.schedulers = {}
@@ -103,7 +114,7 @@ class BaseModel:
                 else:
                     self.logger.info(f'[{network_name}] will be trained from scratch')
             else:
-                self.logger.info(f'All models will be trained from scratch')
+                self.logger.info(f'[{network_name}] will be trained from scratch')
             
             # Optimizator
             option_optimizer = option_network.get('optimizer')
@@ -127,15 +138,18 @@ class BaseModel:
 
         # Lossers and AccumulationStatses
         self.lossers = nn.ModuleDict()
-        self.acc_stats = {}
+        self.acc_statses = {}
         for losser_name in option_lossers:
             option_losser = option_lossers.get(losser_name)
             self.lossers[losser_name] = losser.get_losser(option_losser=option_losser, device=device)
-            self.acc_stats[losser_name] = stats.AccumulationStats()
-
-        self.acc_stats['metrics'] = stats.AccumulationStats()
-
+            self.acc_statses[losser_name] = stats.AccumulationStats()
         self.losses = nn.ModuleDict()
+
+
+        # Metrics
+        #self.option_metrics = option_metrics
+        self.metricer = metrics.Metricer(option_metrics)
+        self.acc_statses['metrics'] = stats.AccumulationStats()
 
         # Display images
         self.display_freq = option_experiments.get('display_freq', None)
@@ -144,15 +158,15 @@ class BaseModel:
             self.result_img_dir = os.path.join(self.experiment_dir_path, 'display_images')
 
             utils.mkdir(self.result_img_dir)
-
+        
     def train(self) -> None:
         raise NotImplementedError('Do not use model_base. Please, use concrete pipeline instand')
 
 
     def logger_info_str(self, epoch:int, iter:int):
         loss_gen_stats_str = ''
-        for acc_name in self.acc_stats:
-            loss_gen_stats_str += f'{acc_name}: <{self.acc_stats[acc_name].get_str(reset=True)}> '
+        for acc_name in self.acc_statses:
+            loss_gen_stats_str += f'{acc_name}: <{self.acc_statses[acc_name].get_str(reset=True)}> '
 
         dtet_info = self.timer.get_stats_str(iter=iter)
         info_str = f'<epoch: {epoch}, iter: {iter}, {dtet_info}> |'

@@ -1,7 +1,7 @@
 name: classae_4jul2022
 task: classae
-device: cuda # cpu cuda
-use_amp: False
+device: cuda # cpu cuda # maybe move to "experiments"?
+use_amp: False # maybe move to "experiments"?
 # gpu_ids: [0] will be released in next versions. Use device instead
 
 dataset:
@@ -116,7 +116,6 @@ experiments:
 train:
   n_iters: 5000
   
-
 logger:
   print_freq: 200
   save_log_file: True

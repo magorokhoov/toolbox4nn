@@ -1,0 +1,100 @@
+name: example_ae_24sep2022
+task: ae
+device: cuda # cpu cuda
+use_amp: False
+# gpu_ids: [0] will be released in next versions. Use device instead
+
+datasets:
+  dataset_1:
+    name: hq
+    path_dir: /home/magorokhoov/homeNN/Datasets/mounted/FFHQ
+    batch_size: 4
+    shuffle: True
+    num_workers: 4
+
+    processing:
+      loader: cv # cv, numpy (not implemented)
+      mode: rgb # rgb, rgba, bgr, bgra, gray, gray3dim, unchanged (not implemented)
+
+      # if string -> config path
+      # if list -> config pipeline
+      transforms: []
+      augmentations:
+
+networks:
+  en:
+    arch: classae_en
+    in_nc: 3
+    mid_nc: 32
+    inner_nc: 256 # 32x8
+
+    act_type: gelu
+    norm_type: group
+    norm_groups: 4
+
+    optimizer:
+      name: adamw
+      weight_decay: 0.001
+      beta1: 0.9
+      beta2: 0.99
+      lr: 1e-3
+
+    scheduler:
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8]
+      gamma: 0.5
+
+  de:
+    arch: classae_de
+    inner_nc: 256
+    mid_nc: 32
+    out_nc: 3
+
+    act_type: gelu
+    norm_type: group
+    norm_groups: 4
+
+    optimizer:
+      name: adamw
+      weight_decay: 0.001
+      beta1: 0.9
+      beta2: 0.99
+      lr: 1e-3
+
+    scheduler:
+      scheme: multistep
+      #milestones: []
+      milestones_rel: [0.2, 0.4, 0.6, 0.8]
+      gamma: 0.5
+
+lossers:
+  l_gen:
+    losser_type: image
+    loss:
+      pixel:
+        #loss_name: pix_l1
+        criterion: { criterion_type: elastic, alpha: 0.8 }
+        weight: 1.0
+      #tv:
+      #  criterion: {gamma: 0.8}
+      #  weight: 0.001
+
+metrics:
+  psnr_0:
+    metric_type: psnr
+
+weights:
+  #ae:
+  #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  #  strict: False
+
+experiments:
+  root: "../experiments/"
+  saving_freq: 10000
+  display_freq: 200
+
+  n_iters: 5000
+
+  log_print_freq: 100
+  save_log_file: True

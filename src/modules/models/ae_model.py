@@ -35,13 +35,15 @@ class AutoEncoder(base_model.BaseModel):
         self.networks, self.lossers, self.optimizers, self.schedulers
         self.dataloader, self.batch_size
         self.amp_scaler, self.device, self.cast
-        self.acc_stats, self.display_freq, self.experiments_root
+        self.acc_statses, self.display_freq, self.experiments_root
         self.logger, self.metrics, self.saving_freq
         '''
 
     def train(self) -> None:
         
         self.timer = utils.TrainTimer(n_iters=self.n_iters, print_freq=self.print_freq)
+        self.batch_size = self.batch_sizes['dataset_1']  # Todo:recode it
+        self.dataloader = self.dataloaders['dataset_1'] # Todo:recode it
 
         n_epochs = math.ceil(self.n_iters / len(self.dataloader))
 
@@ -66,16 +68,17 @@ class AutoEncoder(base_model.BaseModel):
                     with self.cast(enabled=self.use_amp):
                         encoded_features = self.networks['en'](img_A)
                         img_pred = self.networks['de'](encoded_features)
+                        #print(img_pred.shape, img_B.shape, img_A.shape)
                         loss_gen = self.lossers['l_gen'](img_pred, img_B)
 
                     last_losses_dict = self.lossers['l_gen'].get_last_losses()
-                    self.acc_stats['l_gen'].add_accumulation(last_losses_dict)
+                    self.acc_statses['l_gen'].add_accumulation(last_losses_dict)
                     
                     # Loss Generator Backward
                     self.optimizers['de'].zero_grad()
                     self.optimizers['en'].zero_grad()
                     
-                    loss_gen.backward()
+                    self.amp_scaler.scale(loss_gen).backward()
                     
                     self.amp_scaler.step(self.optimizers['de'])
                     self.amp_scaler.update()
@@ -86,12 +89,11 @@ class AutoEncoder(base_model.BaseModel):
                     self.schedulers['en'].step()
 
                     # Metrics
-                    metrics_dict = metrics.get_metrics_dict(
-                        metrics=self.metrics_list,
-                        img1=img_B.detach().cpu(),
-                        img2=img_pred.detach().cpu()
-                        )
-                    self.acc_stats['metrics'].add_accumulation(metrics_dict)
+                    metrics_dict = self.metricer.calc_dict_metrics(
+                        img_B.detach().cpu().float(),
+                        img_pred.detach().cpu().float()
+                    )
+                    self.acc_statses['metrics'].add_accumulation(metrics_dict)
 
                     # Display images
                     if i % self.display_freq == 0:
@@ -101,7 +103,7 @@ class AutoEncoder(base_model.BaseModel):
                             img_A.detach().cpu(),
                             img_B.detach().cpu(),
                             img_pred.detach().cpu()])
-
+                    
                     # Print info
                     if i % self.print_freq == 0:
                         self.logger_info_str(epoch=epoch, iter=i)

@@ -15,6 +15,8 @@ def create_dataset(option_ds: dict) -> Dataset:
         from data.datasets.datasetCL2folder import DatasetCL2folder as D
     elif name == 'a2b':
         from data.datasets.datasetA2B import DatasetA2B as D
+    elif name == 'hq':
+        from data.datasets.datasetHQ import DatasetHQ as D
     elif name == 'img':
         from data.datasets.datasetImg import DatasetImg as D 
     elif name == 'folderfolders':

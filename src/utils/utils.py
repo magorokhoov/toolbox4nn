@@ -176,7 +176,7 @@ class TrainTimer:
         return str_result
 
 
-def display_images(result_img_dir:str, iter: int, tensor_images_list: list):
+def display_images(result_img_dir:str, iter: int, tensor_images_list: list, mode='rgb'):
         result_img = tensor2npimg(tensor_images_list[0][0])
 
         for i in range(1, len(tensor_images_list)):
@@ -187,4 +187,10 @@ def display_images(result_img_dir:str, iter: int, tensor_images_list: list):
 
         result_img_path = os.path.join(result_img_dir, f'{iter}.png')
 
+        if mode == 'rgb':
+            result_img = cv2.cvtColor(result_img, cv2.COLOR_RGB2BGR)
+        elif mode == 'bgr':
+            pass
+        else:
+            raise NotImplementedError(f'[{mode}] is not implemented. Use rgb or bgr')
         cv2.imwrite(result_img_path, result_img)
