@@ -1,3 +1,7 @@
+# This code by victorca25 (with some my modification)
+# https://github.com/victorca25/augmennt
+# original MIT license 
+
 # Workaround to disable Intel Fortran Control+C console event handler installed by scipy
 from os import environ as os_env
 os_env['FOR_DISABLE_CONSOLE_CTRL_HANDLER'] = 'T'

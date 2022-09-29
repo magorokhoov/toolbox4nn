@@ -1,3 +1,7 @@
+# This code by victorca25 (with some my modification)
+# https://github.com/victorca25/augmennt
+# original MIT license 
+
 # from __future__ import division
 #import torch
 import math

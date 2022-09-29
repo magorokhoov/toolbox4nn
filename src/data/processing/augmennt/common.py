@@ -1,3 +1,7 @@
+# This code by victorca25 (with some my modification)
+# https://github.com/victorca25/augmennt
+# original MIT license 
+
 from glob import glob
 from os.path import join as pjoin
 
