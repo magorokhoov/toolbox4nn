@@ -21,9 +21,6 @@ def main():
     print(args.option)
     option_path = args.option
 
-    torch.backends.cudnn.benchmark = False  # True
-    torch.backends.cudnn.deterministic = False 
-
     with open(option_path, 'r') as file_option:
         option = yaml.safe_load(file_option)
 

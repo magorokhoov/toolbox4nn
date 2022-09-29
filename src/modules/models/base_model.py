@@ -82,6 +82,10 @@ class BaseModel:
         else:
             self.logger.info('AMP disabled')
 
+        # cudnn benchmark and deterministic
+        torch.backends.cudnn.benchmark = option['cudnn_benchmark']  # True
+        torch.backends.cudnn.deterministic = option['cudnn_deterministic']
+
         # Datasets
         self.dataloaders = {}
         self.batch_sizes = {}

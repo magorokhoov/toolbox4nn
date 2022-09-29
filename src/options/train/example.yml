@@ -1,8 +1,34 @@
-name: example_ae_24sep2022
+name: example_ae_29sep2022
 task: ae
 device: cuda # cpu cuda
-use_amp: False
+use_amp: True
+cudnn_benchmark: True
+cudnn_deterministic: False
+
 # gpu_ids: [0] will be released in next versions. Use device instead
+
+### Transforms: ###
+#["Compose", "ToTensor", "ToCVImage",
+#"Normalize", "Resize", "Scale", "CenterCrop", "Pad",
+#"Lambda", "RandomApply", "RandomOrder", "RandomChoice", "RandomCrop",
+#"RandomHorizontalFlip", "RandomVerticalFlip", "RandomResizedCrop", "RandomSizedCrop",
+#"FiveCrop", "TenCrop", "LinearTransformation", "ColorJitter",
+#"RandomRotation", "RandomAffine", "RandomAffine6",
+#"Grayscale", "RandomGrayscale", "RandomErasing",
+#"RandomPerspective", "Cutout",
+#"RandomGaussianNoise", "RandomPoissonNoise", "RandomSPNoise",
+#"RandomSpeckleNoise", "RandomCompression",
+#"RandomAverageBlur", "RandomBilateralBlur", "RandomBoxBlur",
+#"RandomGaussianBlur", "RandomMedianBlur", "RandomMotionBlur",
+#"RandomComplexMotionBlur", "RandomAnIsoBlur", "AlignedDownsample",
+#"RandomSincBlur",
+#"BayerDitherNoise", "FSDitherNoise", "AverageBWDitherNoise", "BayerBWDitherNoise",
+#"BinBWDitherNoise", "FSBWDitherNoise", "RandomBWDitherNoise",
+#"FilterColorBalance", "FilterUnsharp", "CLAHE",
+#"FilterMaxRGB", "RandomQuantize", "RandomQuantizeSOM", "SimpleQuantize",
+#"FilterCanny", "ApplyKernel", "RandomGamma", "Superpixels",
+#"RandomChromaticAberration", "RandomCameraNoise",
+#]
 
 datasets:
   dataset_1:
@@ -17,9 +43,13 @@ datasets:
       mode: rgb # rgb, rgba, bgr, bgra, gray, gray3dim, unchanged (not implemented)
 
       # if string -> config path
-      # if list -> config pipeline
-      transforms: []
-      augmentations:
+      # if dict -> config pipeline
+      transformation: ./options/transforms/flips.yml
+        #RandomHorizontalFlip: { p: 0.5 }
+        #RandomVerticalFlip: { p: 0.5 }
+      augmentation:
+        RandomGaussianNoise: { p: 0.7, var_limit: [10.0, 25.0], prob_color: 0.0 }
+        RandomErasing: { p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3] }
 
 networks:
   en:
@@ -92,9 +122,9 @@ weights:
 experiments:
   root: "../experiments/"
   saving_freq: 10000
-  display_freq: 200
+  display_freq: 10
 
   n_iters: 5000
 
-  log_print_freq: 100
+  log_print_freq: 10
   save_log_file: True

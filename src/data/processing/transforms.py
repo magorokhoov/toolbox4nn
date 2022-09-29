@@ -6,7 +6,7 @@ import numpy as np
 
 import data.processing.functional as F
 
-__all__ = ["Compose", "ToTensor"]
+globals_before = globals().copy()
 
 class Compose:
     """Composes several transforms together.
@@ -85,6 +85,39 @@ class RandomBase:
 
     def __repr__(self):
         return self.__class__.__name__ + '(p={})'.format(self.p)
+
+class ChooseOneOf(RandomBase):
+    """Choose One Of transforms_list
+    Args:
+        transforms_list (list): list of tranforms
+        p (float): probability of appling.
+            Default value is 0.5
+    """
+    def __init__(self, transforms_list:list, p: float = 0.5):
+        super().__init__(p)
+        self.transforms_list = transforms_list
+
+    def apply(self, image):
+        return random.choice(self.transforms_list)(image)
+
+
+class Shuffle(RandomBase):
+    """Choose One Of transforms_list
+    Args:
+        transforms_list (list): list of tranforms
+        p (float): probability of appling.
+            Default value is 0.5
+    """
+    def __init__(self, transforms_list:list, p: float = 0.5):
+        super().__init__(p)
+        self.transforms_list = transforms_list.copy()
+
+    def apply(self, image):
+        current_transforms_list = random.shuffle(self.transforms_list.copy())
+        for transform in current_transforms_list:
+            image = transform(image)
+
+        return image
 
 
 class RandomGaussianNoise(RandomBase):
@@ -185,3 +218,12 @@ class RandomGaussianNoise(RandomBase):
                 "rounds": False,
                 "clip": True,
             }
+
+globals_after = globals().copy()
+
+__all__ = []
+for key in globals_after:
+    if key not in globals_before:
+        __all__ += [key]
+
+del globals_before, globals_after

@@ -9,7 +9,10 @@ import torch.nn.functional as F
 from utils import utils
 
 import data.processing.image as image
-import data.processing.transforms as transforms
+import data.processing.augmennt as augmennt
+import data.processing.parser as parser
+
+from data.processing.augmennt.functional import to_tensor
 
 
 class DatasetHQ(torch.utils.data.Dataset):
@@ -19,27 +22,33 @@ class DatasetHQ(torch.utils.data.Dataset):
         self.path_dir = option_ds.get('path_dir')
         self.listdir = sorted(os.listdir(self.path_dir))
 
+        option_processing = option_ds['processing']
+        self.option_transformation = option_processing['transformation']
+        self.option_augmentation = option_processing['augmentation']
+
+        self.mode = option_processing['mode']
+        self.loader = option_processing['loader']
+
+        self.transformation = augmennt.Compose(
+            parser.parse_transform_pipeline(self.option_transformation)
+        )
+        self.augmentation = augmennt.Compose(
+            parser.parse_transform_pipeline(self.option_augmentation)
+        )
+
     def __getitem__(self, index):
         img_path = os.path.join(self.path_dir, self.listdir[index])
 
-        img = image.read_image(img_path, mode='rgb', loader='cv')
+        img = image.read_image(img_path, mode=self.mode, loader=self.loader)
 
-        # Instead concrete use parser for augs and trans
-        trans = transforms.Compose([
-            transforms.ToTensor()
-        ])
-        augs  = transforms.Compose([
-            transforms.RandomGaussianNoise(p=0.5, mean=0, var_limit=(5, 30))
-        ])
+        img_GT = self.transformation(img)
+        img_LQ = self.augmentation(img_GT)
 
-        # !!! swap trans and augs
-        img_GT = trans(img)
+        img_GT = to_tensor(img_GT, bgr2rgb=False)
+        img_LQ = to_tensor(img_LQ, bgr2rgb=False)
 
-        img_LQ = augs(img)
-        img_LQ = trans(img_LQ)
-
-        return {'img_A': img_GT,
-                'img_B': img_LQ,
+        return {'img_A': img_LQ,
+                'img_B': img_GT,
                 'img_A_path': img_path,
                 'img_B_path': img_path}
 
