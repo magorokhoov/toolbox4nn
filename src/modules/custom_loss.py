@@ -14,19 +14,14 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 
-
-from tqdm import tqdm
-from tqdm import tqdm_notebook
-from zmq import device
-
 import data
-import modules.networks
+import modules.networks as networks
 import modules.optimizers
 
 from utils import utils
 
 
-def get_criterion(option_criterion: dict, device=device):
+def get_criterion(option_criterion: dict, device):
     criterion_type = option_criterion.get('criterion_type')
     reduction = option_criterion.get('reduction', 'mean')
 
@@ -49,7 +44,7 @@ def get_criterion(option_criterion: dict, device=device):
         criterion_func = nn.BCEWithLogitsLoss(reduction=reduction).to(device)
     else:
         raise NotImplementedError(
-            f'Loss type [{criterion_type}] is not recognized. losses.py doesn\'t know {[criterion_type]}')
+            f'Loss type [{criterion_type}] is not recognized in losser.py')
     
     return criterion_func
 
@@ -91,3 +86,56 @@ class TVLoss(nn.Module):
             tv = tv_h+tv_w
 
         return tv/(b*c*h*w)
+
+class PerceptualLoss(nn.Module):
+    loss_models = nn.ModuleDict()
+
+    def __init__(self, loss_params: dict, device) -> None:
+        super().__init__()
+
+        self.network_name = loss_params['network']
+        self.criterion = get_criterion(loss_params['criterion'], device=device)
+        self.layers_dict = loss_params['layers']
+        self.layers_list = list(self.layers_dict)
+
+        if self.network_name not in PerceptualLoss.loss_models:
+            model = networks.get_network({'arch': self.network_name}, device=device)
+            model.eval()
+            for p in model.parameters():
+                p.requires_grad = False
+            PerceptualLoss.loss_models[self.network_name] = model
+
+        self.mean_val = torch.tensor(
+                [[[0.485]], [[0.456]], [[0.406]]], requires_grad=False).to(device=device)
+        self.std_val = torch.tensor(
+                [[[0.229]], [[0.224]], [[0.225]]], requires_grad=False).to(device=device)
+
+    def forward(self, x:torch.Tensor, target:torch.Tensor):
+        #x = x.float()
+        #target = target.float()
+
+        #with torch.no_grad():
+
+        
+        if self.network_name in ('vgg16', 'vgg19'):
+            x = (x - self.mean_val) / self.std_val
+            target = (target - self.mean_val) / self.std_val
+
+        feas_x = PerceptualLoss.loss_models[self.network_name](
+            x,
+            listen_list=self.layers_list
+        )
+        feas_target = PerceptualLoss.loss_models[self.network_name](
+            target.detach(),
+            listen_list=self.layers_list
+        )
+
+        loss = 0
+        for layer_name in self.layers_list:
+            loss += self.layers_dict[layer_name] * self.criterion(
+                feas_x[layer_name],
+                feas_target[layer_name]
+            )
+
+        return loss
+

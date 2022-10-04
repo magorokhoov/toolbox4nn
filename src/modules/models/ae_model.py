@@ -101,8 +101,9 @@ class AutoEncoder(base_model.BaseModel):
                             result_img_dir=self.result_img_dir,
                             iter=i, tensor_images_list=[
                             img_A.detach().cpu(),
-                            img_B.detach().cpu(),
-                            img_pred.detach().cpu()])
+                            img_pred.detach().cpu(),
+                            img_B.detach().cpu(),    
+                        ])
                     
                     # Print info
                     if i % self.print_freq == 0:

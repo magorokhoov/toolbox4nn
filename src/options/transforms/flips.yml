@@ -1,2 +1,2 @@
 RandomHorizontalFlip: { p: 0.5 }
-RandomVerticalFlip: { p: 0.5 }
+RandomVerticalFlip: { p: 0.2 }

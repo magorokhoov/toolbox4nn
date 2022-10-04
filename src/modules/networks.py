@@ -7,9 +7,7 @@ import numpy as np
 import cv2
 import matplotlib.pyplot as plt
 import yaml
-
-from tqdm import tqdm
-from tqdm import tqdm_notebook
+import shutil
 
 from utils import utils
 
@@ -42,6 +40,10 @@ def get_network(option_network: dict, device='cpu'):
     elif arch == 'classae_class'.lower():
         from modules.archs.classae import Class_001 as network #
 
+    # Discriminators
+    elif arch == 'stupid_discriminator':
+        from modules.archs.discriminators import StupidD as network
+
     # efficientnet net
     elif arch == 'efficientnet_b0_features'.lower():
         from torchvision.models import efficientnet_b0
@@ -51,6 +53,23 @@ def get_network(option_network: dict, device='cpu'):
         from torchvision.models import efficientnet_b1
         network = efficientnet_b1(pretrained=True)
         return network.features.to(device=device)
+
+    # features - only for loss
+    elif arch == 'vgg16':
+        from modules.archs.feature import VGG16_fea as network
+        weight_path = './modules/weights/vgg16_fea.pth'
+        model = network()
+        model.load_state_dict(torch.load(weight_path))
+        return model.to(device=device)
+
+    elif arch == 'vgg19':
+        from modules.archs.feature import VGG19_fea as network
+        weight_path = './modules/weights/vgg19_fea.pth'
+        model = network()
+        model.load_state_dict(torch.load(weight_path))
+        return model.to(device=device)
+
+    # Wrong arch name
     else:
         raise NotImplementedError(
             f'Neural Network [{arch}] is not recognized. networks.py doesn\'t know {[arch]}')

@@ -1,5 +1,6 @@
 import argparse
 import os
+import random
 
 import cv2
 import matplotlib.pyplot as plt
@@ -8,7 +9,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import yaml
-from tqdm import tqdm, tqdm_notebook
 
 from modules.models import (classae_model, ae_model, classificator)
 from utils import utils
@@ -26,6 +26,11 @@ def main():
 
     # path_log_file = option['logger'].get('path_log_file')
     # logger = get_root_logger('base', root=path_log_file, phase='train', screen=True, tofile=True)
+    seed = option.get('random_seed')
+    #torch.manual_seed(seed) seed(seed)
+    #random.seed(seed)
+    #np.random.seed(seed)
+
     task = option.get('task')
     if task in ('class', 'classification'):
         model = classificator.Classificator(option)

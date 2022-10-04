@@ -1,11 +1,12 @@
-name: example_ae_29sep2022
+name: example_ae_5oct2022
 task: ae
 device: cuda # cpu cuda
 use_amp: True
+random_seed: 0 # not works now 
 cudnn_benchmark: True
 cudnn_deterministic: False
 
-# gpu_ids: [0] will be released in next versions. Use device instead
+# gpu_ids: [0] will be released in next versions
 
 ### Transforms: ###
 #["Compose", "ToTensor", "ToCVImage",
@@ -47,16 +48,19 @@ datasets:
       transformation: ./options/transforms/flips.yml
         #RandomHorizontalFlip: { p: 0.5 }
         #RandomVerticalFlip: { p: 0.5 }
-      augmentation:
-        RandomGaussianNoise: { p: 0.7, var_limit: [10.0, 25.0], prob_color: 0.0 }
-        RandomErasing: { p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3] }
+      augmentation: 
+        RandomOrder:
+          transforms:
+            RandomGaussianNoise: { p: 0.6, var_limit: [5.0, 20.0], prob_color: 0.5 }
+            #RandomGaussianBlur: { p: 0.2, kernel_size: 7, sigmaX: [1, 2], sigmaY: [1, 2]}
+            #RandomErasing: { p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3] }
 
 networks:
   en:
-    arch: classae_en
+    arch: stupid_en
     in_nc: 3
     mid_nc: 32
-    inner_nc: 256 # 32x8
+    #inner_nc: 256 # 32x8
 
     act_type: gelu
     norm_type: group
@@ -76,8 +80,8 @@ networks:
       gamma: 0.5
 
   de:
-    arch: classae_de
-    inner_nc: 256
+    arch: stupid_de
+    #inner_nc: 256
     mid_nc: 32
     out_nc: 3
 
@@ -101,30 +105,40 @@ networks:
 lossers:
   l_gen:
     losser_type: image
-    loss:
-      pixel:
-        #loss_name: pix_l1
-        criterion: { criterion_type: elastic, alpha: 0.8 }
+    losses:
+      pixel-l1:
+        loss_type: pixel
+        criterion: { criterion_type: l1}
         weight: 1.0
       #tv:
-      #  criterion: {gamma: 0.8}
-      #  weight: 0.001
+      #  loss_type: tv 
+      #  criterion: {gamma: 1.0}
+      #  weight: 0.0001
+      #fea:
+      #  loss_type: perceptual
+      #  criterion: { criterion_type: l1 }
+      #  network: 'vgg19'
+      #  layers: {'conv3_2': 0.6, 'conv4_2': 0.4}
+      #  weight: 1.0
 
 metrics:
   psnr_0:
     metric_type: psnr
 
 weights:
-  #ae:
-  #  path: '../experiments/ae_faces_22jun2022/models/ae.pth'
+  #en:
+  #  path: '../experiments/example_ae_4oct2022/models/en.pth'
+  #  strict: False
+  #de:
+  #  path: '../experiments/example_ae_4oct2022/models/de.pth'
   #  strict: False
 
-experiments:
+experiment:
   root: "../experiments/"
-  saving_freq: 10000
-  display_freq: 10
+  saving_freq: 20000
+  display_freq: 100
 
-  n_iters: 5000
+  n_iters: 10000
 
-  log_print_freq: 10
+  log_print_freq: 200
   save_log_file: True

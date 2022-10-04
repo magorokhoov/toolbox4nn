@@ -9,9 +9,6 @@ import cv2
 import matplotlib.pyplot as plt
 import yaml
 
-from tqdm import tqdm
-from tqdm import tqdm_notebook
-
 from utils import utils
 
 

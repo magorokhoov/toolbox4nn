@@ -3,7 +3,6 @@
 # Mikhail Gorokhov
 # Coding custom NN toolbox
 
-from matplotlib.style import available
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,11 +11,6 @@ import os
 import yaml
 import numpy as np
 import cv2
-import matplotlib.pyplot as plt
-
-
-from tqdm import tqdm
-from tqdm import tqdm_notebook
 
 from utils import utils
 import modules.custom_loss as custom_loss
@@ -24,7 +18,7 @@ import modules.custom_loss as custom_loss
 
 def get_losser(option_losser: dict, device):
     losser_type = option_losser['losser_type']
-    option_loss = option_losser['loss']
+    option_losses = option_losser['losses']
 
     if losser_type is None:
         raise NotImplementedError(
@@ -32,7 +26,7 @@ def get_losser(option_losser: dict, device):
 
     losser_type = losser_type.lower()
     if losser_type in ('class', 'image'):
-        losser = Losser(option_loss=option_loss, device=device)
+        losser = Losser(option_losses=option_losses, device=device)
     else:
         raise NotImplementedError(
             f'losser_type [{losser_type}] is not implemented')
@@ -41,16 +35,16 @@ def get_losser(option_losser: dict, device):
     
 
 class Losser(nn.Module):
-    def __init__(self, option_loss: dict, device) -> None:
+    def __init__(self, option_losses: dict, device) -> None:
         super().__init__()
 
-        self.option_loss = option_loss
+        self.option_losses = option_losses
         self.last_losses = {}
 
         self.loss_funcs = [] # nn.ModuleList()
-        for loss_type in self.option_loss:
-            loss_params = self.option_loss.get(loss_type)
-            loss_name = loss_params.get('loss_name', None) # Set None if you wanna use default name "<loss_type>_<suffix>"
+        for loss_name in self.option_losses:
+            loss_params = self.option_losses[loss_name]
+            loss_type = loss_params['loss_type']
             func = get_loss_func(loss_name=loss_name, loss_type=loss_type, loss_params=loss_params, device=device)
 
             self.loss_funcs += [func]
@@ -59,9 +53,9 @@ class Losser(nn.Module):
 
         total_loss = 0.0
         for func in self.loss_funcs:
-            loss_type = func.get('loss_type')
+            loss_type = func['loss_type']
 
-            if loss_type in ('pixel', 'class'):
+            if loss_type in ('pixel', 'class', 'perceptual'):
                 loss = func['func'](pred, target)
 
             elif loss_type in ('tv'):
@@ -94,10 +88,16 @@ def get_loss_func(loss_name: str, loss_type: str, loss_params: dict, device) -> 
             option_criterion=option_criterion,
             device=device)
 
+    elif loss_type == 'perceptual':
+        loss_func = custom_loss.PerceptualLoss(
+            loss_params=loss_params,
+            device=device
+        )
+
     elif loss_type == 'tv':
         loss_func = custom_loss.TVLoss(
-            option_criterion=option_criterion,
-            device=device)
+            option_criterion=option_criterion
+        )
 
     else:
         raise NotImplementedError(f'loss_type {loss_type} is not implemented')

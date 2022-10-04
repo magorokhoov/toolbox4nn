@@ -93,6 +93,10 @@ class ActivationLayer(nn.Module):
 
 
 class UpBlock(nn.Module):
+    '''
+    up_type: upscale, shuffle, transpose
+    '''
+
     def __init__(self, in_nc, out_nc, up_type: str, factor=2, kernel_size=3, act_type:str='gelu') -> None:
         super(UpBlock, self).__init__()
 
@@ -122,7 +126,7 @@ class UpBlock(nn.Module):
 class BlockCNA(nn.Module):
     def __init__(self,
                 in_nc, out_nc, kernel_size, stride=1, groups=1,
-                pad_type='none',
+                pad_type='zero',
                 act_type='relu',
                 norm_type='none', affine=True, norm_groups=1) -> None:
         super(BlockCNA, self).__init__()
@@ -150,7 +154,7 @@ class BlockCNA(nn.Module):
 class ResDown(nn.Module):
     def __init__(self,
             in_nc, out_nc, kernel_size, stride=2,
-            pad_type='none',
+            pad_type='zero',
             act_type='relu',
             norm_type='none', affine=True, norm_groups=1) -> None:
         super(ResDown, self).__init__()
@@ -173,7 +177,7 @@ class ResCNA(nn.Module):
     def __init__(self,
             mid_nc, kernel_size,
             num_multiple: int=1,
-            pad_type='none',
+            pad_type='zero',
             act_type='relu',
             norm_type='none', affine=True, norm_groups=1) -> None:
         super(ResCNA, self).__init__()
@@ -205,7 +209,7 @@ class ResBottleneck(nn.Module):
     def __init__(self,
         mid_nc, kernel_size, groups=1,
         num_multiple: int=1,
-        pad_type='none',
+        pad_type='zero',
         act_type='relu',
         norm_type='none', affine=True, norm_groups=1) -> None:
 
@@ -246,7 +250,7 @@ class ResTruck(nn.Module):
     def __init__(self,
             mid_nc, kernel_size, groups=1,
             num_multiple: int=1, num_blocks: int=1,
-            pad_type='none',
+            pad_type='zero',
             act_type='relu',
             norm_type='none', affine=True, norm_groups=1,
             resblock_type='classic') -> None:

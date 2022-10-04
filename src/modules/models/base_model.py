@@ -34,7 +34,7 @@ class BaseModel:
         option_datasets = option.get('datasets')
         option_networks = option.get('networks')
         option_weights = option.get('weights')
-        option_experiments = option.get('experiments')
+        option_experiments = option.get('experiment')
         option_lossers = option.get('lossers')
         option_metrics = option.get('metrics')
         
