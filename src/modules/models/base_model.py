@@ -37,6 +37,8 @@ class BaseModel:
         option_experiments = option.get('experiment')
         option_lossers = option.get('lossers')
         option_metrics = option.get('metrics')
+
+        self.option_lossers = option_lossers
         
         # Experiments
         self.saving_freq = option_experiments.get('saving_freq')

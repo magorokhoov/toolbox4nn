@@ -1,0 +1,1 @@
+python train.py -option ./options/train/example_srgan.yml

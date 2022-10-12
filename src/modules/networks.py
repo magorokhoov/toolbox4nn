@@ -32,7 +32,9 @@ def get_network(option_network: dict, device='cpu'):
     elif arch == 'stupid_en'.lower():
         from modules.archs.other import StupidEn as network # 
     elif arch == 'stupid_de'.lower():
-        from modules.archs.other import StupidDe as network # 
+        from modules.archs.other import StupidDe as network #
+    elif arch == 'stupid_gen'.lower():
+        from modules.archs.other import StupidGen as network # 
     elif arch == 'classae_en'.lower():
         from modules.archs.classae import Encoder_001 as network # 
     elif arch == 'classae_de'.lower():

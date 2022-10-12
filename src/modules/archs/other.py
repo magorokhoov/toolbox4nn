@@ -8,6 +8,21 @@ import numpy as np
 from . import blocks
 
 
+class StupidGen(nn.Module):
+    def __init__(self, option_arch: dict):
+        super().__init__()
+
+        stupid_en = StupidEn(option_arch)
+        stupid_de = StupidDe(option_arch)
+
+        self.model = nn.Sequential(
+            stupid_en,
+            stupid_de
+        )
+        
+    def forward(self, x):
+        return self.model(x)
+
 class StupidEn(nn.Module):
     def __init__(self, option_arch: dict):
         super().__init__()

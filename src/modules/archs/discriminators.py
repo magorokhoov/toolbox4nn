@@ -31,15 +31,23 @@ class StupidD(nn.Module):
             4*mid_nc, 4*mid_nc, 5, stride=2,
             act_type=act_type, norm_groups=norm_groups, norm_type=norm_type
         )
+        block3_2 = blocks.BlockCNA( # 64 -> 32
+            4*mid_nc, 4*mid_nc, 5, stride=2,
+            act_type=act_type, norm_groups=norm_groups, norm_type=norm_type
+        )
         down4 = blocks.BlockCNA( # 32 -> 16
+            4*mid_nc, 4*mid_nc, 5, stride=2,
+            act_type=act_type, norm_groups=norm_groups, norm_type=norm_type
+        )
+        block4_2 = blocks.BlockCNA( # 64 -> 32
             4*mid_nc, 4*mid_nc, 5, stride=2,
             act_type=act_type, norm_groups=norm_groups, norm_type=norm_type
         )
         last = nn.Conv2d(4*mid_nc, 1, kernel_size=3, stride=1, padding=0)
 
         self.model = nn.Sequential(
-            conv0, down1, down2,
-            down3, down4, last
+            pad3, act, conv0, down1, down2,
+            down3, block3_2, down4, block4_2, last
         )
 
     def forward(self, x):

@@ -1,5 +1,5 @@
-name: example_ae_5oct2022
-task: ae
+name: example_ae_12oct2022
+task: srgan
 device: cuda # cpu cuda
 use_amp: True
 random_seed: 0 # not works now 
@@ -51,15 +51,16 @@ datasets:
       augmentation: 
         RandomOrder:
           transforms:
-            RandomGaussianNoise: { p: 0.6, var_limit: [5.0, 20.0], prob_color: 0.5 }
-            #RandomGaussianBlur: { p: 0.2, kernel_size: 7, sigmaX: [1, 2], sigmaY: [1, 2]}
+            RandomGaussianNoise: { p: 0.6, var_limit: [5.0, 30.0], prob_color: 0.5 }
+            RandomGaussianBlur: { p: 0.4, kernel_size: 7, sigmaX: [1, 4], sigmaY: [1, 4]}
             #RandomErasing: { p: 0.5, scale: [0.02, 0.33], ratio: [0.3, 3.3] }
 
 networks:
-  en:
-    arch: stupid_en
+  gen:
+    arch: stupid_gen
     in_nc: 3
     mid_nc: 32
+    out_nc: 3
     #inner_nc: 256 # 32x8
 
     act_type: gelu
@@ -76,15 +77,14 @@ networks:
     scheduler:
       scheme: multistep
       #milestones: []
-      milestones_rel: [0.2, 0.4, 0.6, 0.8]
+      milestones_rel: [0.05, 0.2, 0.4, 0.6, 0.8]
       gamma: 0.5
 
-  de:
-    arch: stupid_de
-    #inner_nc: 256
+  dis:
+    arch: stupid_discriminator
+    in_nc: 3
     mid_nc: 32
-    out_nc: 3
-
+  
     act_type: gelu
     norm_type: group
     norm_groups: 4
@@ -99,7 +99,7 @@ networks:
     scheduler:
       scheme: multistep
       #milestones: []
-      milestones_rel: [0.2, 0.4, 0.6, 0.8]
+      milestones_rel: [0.05, 0.2, 0.4, 0.6, 0.8]
       gamma: 0.5
 
 lossers:
@@ -118,27 +118,44 @@ lossers:
       #  loss_type: feature
       #  criterion: { criterion_type: l1 }
       #  network: 'vgg19'
-      #  layers: {'conv3_2': 0.6, 'conv4_2': 0.4}
+      #  layers: {'conv3_2': 0.5, 'conv4_2': 0.5}
       #  weight: 1.0
+
+  gan:
+    losser_type: gan # TODO: code new losser_type for GAN
+    relativistic: True
+    
+    real_val: 1.0 # (0.9, 1.0)
+    fake_val: 0.0 # (0.0, 0.1)
+
+    loss_func: 
+      loss_type: gan
+      criterion: { criterion_type: BCEWithLogitsLoss}
+      weight: 1.0
+
+    weight_gen: 1e-2
+    weight_dis_fake: 1.0
+    weight_dis_real: 1.0
+    
 
 metrics:
   psnr_0:
     metric_type: psnr
 
 weights:
-  #en:
-  #  path: '../experiments/example_ae_4oct2022/models/en.pth'
-  #  strict: False
-  #de:
-  #  path: '../experiments/example_ae_4oct2022/models/de.pth'
-  #  strict: False
+  gen:
+    path: '../experiments/example2_ae_11oct2022/models/gen.pth'
+    strict: False
+  dis:
+    path: '../experiments/example2_ae_11oct2022/models/dis.pth'
+    strict: False
 
 experiment:
   root: "../experiments/"
   saving_freq: 20000
-  display_freq: 100
+  display_freq: 200
 
-  n_iters: 10000
+  n_iters: 60000
 
-  log_print_freq: 200
+  log_print_freq: 500
   save_log_file: True

@@ -24,9 +24,9 @@ class AccumulationStats:
 
     def get_str(self, reset=True) -> str:
         result_str = ''
-        for i, acc_name in enumerate(self.accumulation):
+        for i, acc_name in enumerate(sorted(self.accumulation)):
             mean_acc = self.accumulation[acc_name] / self.count
-            result_str += f'{acc_name:s}={mean_acc:.4e}'
+            result_str += f'{acc_name:s}={mean_acc:.3e}'
             if i < len(self.accumulation) - 1:
                 result_str += ', '
 
