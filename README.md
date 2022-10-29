@@ -3,7 +3,7 @@ Toolbox4nn is PyTorch framework for research and developing. Priority is CV (cla
 
 *In near future I will make awesome readme and docs*
 
-**README IS OLD! See src/option/train/ for actual option.yml**
+**README IS OLD! See src/options/train/ for actual option.yml**
 
 Let's be in touch! Join to our [Discord server](https://discord.gg/wm2dbNYAQE)!
 
